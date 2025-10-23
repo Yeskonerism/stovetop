@@ -7,20 +7,20 @@ public static class InitCommand
 {
     public static void Run(string runtime)
     {
-        string runtimeAsked;
-
-        if (string.IsNullOrEmpty(runtime))
-            runtimeAsked = Ask("[STOVE] Enter project runtime", "dotnet");
-        else
-            runtimeAsked = runtime;
+        Directory.CreateDirectory(StovetopCore.STOVETOP_CONFIG_ROOT);
+        foreach (var subdir in new[] { "profiles", "cache", "cache/backups" })
+            Directory.CreateDirectory(Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, subdir));
         
         StovetopCore.STOVETOP_CONFIG = new StovetopConfig
         {
-            Runtime = runtimeAsked,
             WorkingDirectory = Directory.GetCurrentDirectory()
         };
 
         StovetopCore.STOVETOP_CONFIG.Project = Ask("[STOVE] Enter project name");
+        
+        string runtimeAsked = string.IsNullOrEmpty(runtime) ? Ask("[STOVE] Enter project runtime", "dotnet") : runtime;
+        StovetopCore.STOVETOP_CONFIG.Runtime = runtimeAsked;
+        
         StovetopCore.STOVETOP_CONFIG.RunCommand = Ask("[STOVE] Enter run command", "run --");
         StovetopCore.STOVETOP_CONFIG.BuildCommand = Ask("[STOVE] Enter build command", "build");
 
@@ -37,14 +37,11 @@ public static class InitCommand
                 return;
             }
 
-            string backupPath = Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, $"backup_{DateTime.Now:yyyyMMdd_HHmmss}.json");
+            // create a backup version if overwriting stove config file
+            string backupPath = Path.Combine(Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, "cache/backups"), $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}-stovetop-backup.json");
             if (File.Exists(StovetopCore.STOVETOP_CONFIG_PATH))
                 File.Copy(StovetopCore.STOVETOP_CONFIG_PATH, backupPath, true);
         }
-
-        Directory.CreateDirectory(StovetopCore.STOVETOP_CONFIG_ROOT);
-        foreach (var subdir in new[] { "profiles", "cache" })
-            Directory.CreateDirectory(Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, subdir));
 
         Console.Write(
             (StovetopCore.STOVETOP_CONFIG.Project != "")

@@ -18,7 +18,7 @@ public static class StovetopCore
     public static string STOVETOP_CONFIG_ROOT;
     public static string STOVETOP_CONFIG_PATH;
     public static bool STOVETOP_CONFIG_EXISTS;
-    public static StovetopConfig? STOVETOP_CONFIG;
+    public static StovetopConfig STOVETOP_CONFIG;
     public static StovetopLogger STOVETOP_LOGGER;
     public static string STOVETOP_RUNTIME;
     

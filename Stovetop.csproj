@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <Folder Include="screenshots\" />
+      <Folder Include="testing\" />
     </ItemGroup>
 
 </Project>
