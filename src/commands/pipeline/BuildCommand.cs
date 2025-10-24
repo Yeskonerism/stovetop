@@ -7,7 +7,7 @@ public class BuildCommand
 {
     public static void Run()
     {
-        if (StovetopCore.STOVETOP_CONFIG != null)
+        if (StovetopCore.STOVETOP_CONFIG_EXISTS)
         {
             string[] args = CommandParser.ParseArguments(StovetopCore.STOVETOP_CONFIG.BuildCommand);
 
@@ -22,8 +22,12 @@ public class BuildCommand
             foreach (var arg in args)
                 buildProcess.ArgumentList.Add(arg);
             
+            StovetopHookHandler.ExecuteHook(HookType.PreBuild);
+            
             var process = Process.Start(buildProcess);
             process.WaitForExit();
+            
+            StovetopHookHandler.ExecuteHook(HookType.PostBuild);
             
             if(process.ExitCode != 0)
                 StovetopCore.STOVETOP_LOGGER.Error(process.StandardError.ReadToEnd());

@@ -23,9 +23,8 @@ public class StovetopConfig
     [JsonPropertyName("profiles")] public string[] Profiles { get; set; } =  Array.Empty<string>();
 
     // hooks
-    [JsonPropertyName("preRun")] public string PreRun { get; set; } = $"sh {StovetopCore.STOVETOP_CONFIG_ROOT}/scripts/preRunHook.sh";
-    [JsonPropertyName("postRun")] public string PostRun { get; set; } = $"sh {StovetopCore.STOVETOP_CONFIG_ROOT}/scripts/postRunHook.sh";
-
+    [JsonPropertyName("hooks")] public string HookPath { get; set; } = $"{StovetopCore.STOVETOP_CONFIG_ROOT}/scripts/hooks";
+    
     public static StovetopConfig Load(string file = ".stove/stovetop.json")
     {
         if (!File.Exists(file))
@@ -39,8 +38,7 @@ public class StovetopConfig
 
         config.Aliases ??= new Dictionary<string, string>();
         config.Profiles ??= Array.Empty<string>();
-        config.PreRun ??= "";
-        config.PostRun ??= "";
+        config.HookPath ??= "";
         
         return config;
     }

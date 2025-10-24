@@ -6,7 +6,6 @@ public enum HookType
 {
     PreRun,
     PostRun,
-    /* For future use *wink wink* */
     PreBuild,
     PostBuild,
     PreDeploy,
@@ -74,9 +73,10 @@ public static class StovetopHookHandler
 
         return hookType switch
         {
-            HookType.PreRun => StovetopCore.STOVETOP_CONFIG.PreRun,
-            HookType.PostRun => StovetopCore.STOVETOP_CONFIG.PostRun,
-            // Future: PreBuild, PostBuild, etc.
+            HookType.PreRun => StovetopCore.STOVETOP_CONFIG.HookPath + "/preRunHook.sh",
+            HookType.PostRun => StovetopCore.STOVETOP_CONFIG.HookPath + "/postRunHook.sh",
+            HookType.PreBuild => StovetopCore.STOVETOP_CONFIG.HookPath + "/preBuildHook.sh",
+            HookType.PostBuild => StovetopCore.STOVETOP_CONFIG.HookPath + "/postBuildHook.sh",
             _ => null
         };
     }
@@ -106,23 +106,35 @@ public static class StovetopHookHandler
             return (fileName, arguments);
         }
         
-        // No arguments
+        // No arguments (yet!)
         return (command, "");
     }
 
     public static void CreateDefaultHookScripts()
     {
         string scriptsDir = Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, "scripts");
-        Directory.CreateDirectory(scriptsDir);
+        string hooksDir = Path.Combine(scriptsDir, "hooks");
+        
+        Directory.CreateDirectory(hooksDir);
 
         CreateHookScript(
-            Path.Combine(scriptsDir, "preRunHook.sh"),
+            Path.Combine(hooksDir, "preRunHook.sh"),
             "#!/bin/bash\necho '[HOOK] Starting project...'"
         );
 
         CreateHookScript(
-            Path.Combine(scriptsDir, "postRunHook.sh"),
+            Path.Combine(hooksDir, "postRunHook.sh"),
             "#!/bin/bash\necho '[HOOK] Project finished.'"
+        );
+        
+        CreateHookScript(
+            Path.Combine(hooksDir, "preBuildHook.sh"),
+            "#!/bin/bash\necho '[HOOK] Project building...'"
+        );
+        
+        CreateHookScript(
+            Path.Combine(hooksDir, "postBuildHook.sh"),
+            "#!/bin/bash\necho '[HOOK] Project built.'"
         );
     }
 
