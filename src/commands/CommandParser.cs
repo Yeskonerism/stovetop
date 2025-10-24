@@ -22,7 +22,7 @@ public class CommandParser
             if (args.Length > 0 && config.Aliases != null && config.Aliases.ContainsKey(args[0]))
             {
                 args[0] = config.Aliases[args[0]]; // replace alias with real command
-                Console.WriteLine($"[STOVE] Alias '{args[0]}' resolved");
+                StovetopCore.STOVETOP_LOGGER.Info($"Alias '{args[0]}' resolved");
             }
         }
 
@@ -45,6 +45,18 @@ public class CommandParser
                     break;
                 case "build":
                     Pipeline.BuildCommand.Run();
+                    break;
+                case "revert":
+                    if (args.Length > 1)
+                    {
+                        if(args[1] == "--latest")
+                            Config.RevertCommand.Run(StovetopBackup.GetLatestBackup());
+                        else
+                            Config.RevertCommand.Run(args[1]);
+                    }
+                    break;
+                case "backup":
+                    StovetopBackup.ViewBackups();
                     break;
             }
         }

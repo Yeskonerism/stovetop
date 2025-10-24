@@ -14,3 +14,5 @@ It lets you define how each project is built, run, and configured — all throug
 - built-in command parser
 - built-in logger/text-logging
 - globally accessible variables set during initialisation (e.g StovetopCore.cs - STOVETOP_CONFIG_PATH)
+- Config backup and restore
+- .stove/scripts directory for per-project scripting (this also contains auto-generated pre and post-run hooks)

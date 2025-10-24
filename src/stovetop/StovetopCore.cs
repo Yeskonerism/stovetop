@@ -72,25 +72,10 @@ public static class StovetopCore
     {
         Directory.CreateDirectory(STOVETOP_CONFIG_ROOT);
             
-        // init profiles and cache directory
-        Directory.CreateDirectory(Path.Combine(STOVETOP_CONFIG_ROOT, "profiles"));
-        Directory.CreateDirectory(Path.Combine(STOVETOP_CONFIG_ROOT, "cache"));
+        Directory.CreateDirectory(STOVETOP_CONFIG_ROOT);
+        foreach (var subdir in new[] { "profiles", "cache", "cache/backups" })
+            Directory.CreateDirectory(Path.Combine(STOVETOP_CONFIG_ROOT, subdir));
+        
+        StovetopHookHandler.CreateDefaultHookScripts();
     }
-
-    public static bool VerifyRuntime()
-    {
-        bool runtimeExists = false;
-        
-        var psi = new ProcessStartInfo
-        {
-            FileName = "bash",
-            Arguments = $"-c 'which {STOVETOP_RUNTIME}'"
-        };
-        
-        // check runtime exists with "which" command
-        // check output
-        // if not exist, return false + error message
-        
-        return runtimeExists;
-    } 
 }

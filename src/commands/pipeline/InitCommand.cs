@@ -7,9 +7,7 @@ public static class InitCommand
 {
     public static void Run(string runtime)
     {
-        Directory.CreateDirectory(StovetopCore.STOVETOP_CONFIG_ROOT);
-        foreach (var subdir in new[] { "profiles", "cache", "cache/backups" })
-            Directory.CreateDirectory(Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, subdir));
+        StovetopCore.CreateDefaultStructure();
         
         StovetopCore.STOVETOP_CONFIG = new StovetopConfig
         {
@@ -27,7 +25,7 @@ public static class InitCommand
         StovetopCore.STOVETOP_CONFIG.Aliases["r"] = "run";
         StovetopCore.STOVETOP_CONFIG.Aliases["b"] = "build";
 
-        if (Directory.Exists(StovetopCore.STOVETOP_CONFIG_ROOT))
+        if (StovetopCore.STOVETOP_CONFIG_EXISTS)
         {
             Console.Write("[STOVE] Config already exists. Overwrite? [y/N] -> ");
             var overwrite = (Console.ReadLine() ?? "").Trim().ToLower();
@@ -38,9 +36,7 @@ public static class InitCommand
             }
 
             // create a backup version if overwriting stove config file
-            string backupPath = Path.Combine(Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, "cache/backups"), $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}-stovetop-backup.json");
-            if (File.Exists(StovetopCore.STOVETOP_CONFIG_PATH))
-                File.Copy(StovetopCore.STOVETOP_CONFIG_PATH, backupPath, true);
+            StovetopBackup.CreateBackup();
         }
 
         Console.Write(

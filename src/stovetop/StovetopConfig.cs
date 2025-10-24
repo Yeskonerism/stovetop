@@ -23,8 +23,8 @@ public class StovetopConfig
     [JsonPropertyName("profiles")] public string[] Profiles { get; set; } =  Array.Empty<string>();
 
     // hooks
-    [JsonPropertyName("preRun")] public string PreRun { get; set; } = "sh -c \"echo 'Starting'\"";
-    [JsonPropertyName("postRun")] public string PostRun { get; set; } = "sh -c \"echo 'Ending'\"";
+    [JsonPropertyName("preRun")] public string PreRun { get; set; } = $"sh {StovetopCore.STOVETOP_CONFIG_ROOT}/scripts/preRunHook.sh";
+    [JsonPropertyName("postRun")] public string PostRun { get; set; } = $"sh {StovetopCore.STOVETOP_CONFIG_ROOT}/scripts/postRunHook.sh";
 
     public static StovetopConfig Load(string file = ".stove/stovetop.json")
     {
@@ -43,44 +43,5 @@ public class StovetopConfig
         config.PostRun ??= "";
         
         return config;
-    }
-
-    public static void PrintConfig(PrintMode mode)
-    {
-        var config = Load();
-        string aliasList = "";
-
-        string printString = "[STOVE] invalid print mode specified";
-        
-        foreach (var alias in config.Aliases)
-        {
-            aliasList += alias.Key + " -> " + alias.Value +"\n";
-        }
-
-        switch (mode)
-        {
-            case PrintMode.All:
-                printString =
-                    $"[Project]\n"+
-                    $"Name: {config.Project}\n" +
-                    $"Runtime: {config.Runtime}\n\n" +
-                    $"[Commands]\n" +
-                    $"Run: {config.RunCommand}\n" +
-                    $"Build: {config.BuildCommand}\n\n" +
-                    $"[Aliases]\n" +
-                    $"{aliasList}\n" +
-                    $"[Profiles]\n\n" +
-                    $"[Hooks]\n" +
-                    $"Pre-run: {config.PreRun}\n" +
-                    $"Post-run: {config.PostRun}";
-                break;
-            case PrintMode.Aliases:
-                printString =
-                    $"[Aliases]\n" +
-                    $"{aliasList}";
-                break;
-        }
-        
-        Console.WriteLine(printString);
     }
 }
