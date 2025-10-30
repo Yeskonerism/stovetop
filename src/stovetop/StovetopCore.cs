@@ -38,10 +38,14 @@ public static class StovetopCore
         }
     }
 
-    public static bool VerifyConfig()
+    public static bool VerifyConfig(bool backup = false)
     {
         STOVETOP_CONFIG_EXISTS = File.Exists(STOVETOP_CONFIG_PATH);
-        STOVETOP_LOGGER.Info(STOVETOP_CONFIG_EXISTS ? "Config Verified" : "Config Not Verified");
+        if(!backup)
+            STOVETOP_LOGGER.Info(STOVETOP_CONFIG_EXISTS ? "Main Config Verified" : "Main Config Not Verified");
+        else
+            STOVETOP_LOGGER.Info(STOVETOP_CONFIG_EXISTS ? "Backup Verified" : "Backup Not Verified");
+        
         return STOVETOP_CONFIG_EXISTS;
     }
 

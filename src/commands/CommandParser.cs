@@ -1,3 +1,5 @@
+using Stovetop.commands.config;
+using Stovetop.Commands.Pipeline;
 using Stovetop.stovetop;
 
 namespace Stovetop.Commands;
@@ -31,32 +33,77 @@ public class CommandParser
             switch (args[0])
             {
                 case "init":
-                    string passedRuntime = null;
-                    
-                    // check if runtime passed in, if not, remain null
-                    // (this gets handled in InitCommand.cs)
-                    if (args.Length > 1)
-                        passedRuntime = args[1];
+                    string passedRuntime = (args.Length > 1) ? args[1] : null;
                     
                     Pipeline.InitCommand.Run(passedRuntime);
                     break;
                 case "run":
-                    Pipeline.RunCommand.Run();
+                    // TODO | Backup running 
+                    string passedConfig;
+                    
+                    if (args.Length > 1)
+                    {
+                        if (args[1] == "--backup")
+                        {
+                            if (args.Length > 2)
+                            {
+                                if(args[2] == "latest")
+                                    passedConfig = StovetopBackup.GetLatestBackup();
+                                else
+                                {
+                                    passedConfig = args[2];
+                                }
+
+                                string pathToBackups = Path.Combine(Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, "cache"), "backups");
+                                string pathToBackupConfig = Path.Combine(pathToBackups, passedConfig+"-stovetop-backup.json");
+                                
+                                StovetopCore.STOVETOP_CONFIG_PATH = pathToBackupConfig;
+
+                                if (StovetopCore.VerifyConfig(true))
+                                {
+                                    StovetopCore.LoadConfig();
+                                    Pipeline.RunCommand.Run();
+                                }
+                                else
+                                {
+                                    StovetopCore.STOVETOP_LOGGER.Error("Given backup ID is nonexistent");
+                                }
+                            } 
+                        }
+                    } else
+                        Pipeline.RunCommand.Run();
                     break;
                 case "build":
                     Pipeline.BuildCommand.Run();
                     break;
-                case "revert":
+                case "backup":
                     if (args.Length > 1)
                     {
-                        if(args[1] == "--latest")
-                            Config.RevertCommand.Run(StovetopBackup.GetLatestBackup());
-                        else
-                            Config.RevertCommand.Run(args[1]);
+                        switch (args[1])
+                        {
+                            case "ls" or "view" or "list":
+                                StovetopBackup.ViewBackups();
+                                break;
+                            case "revert":
+                                if (args.Length > 2)
+                                {
+                                    if (args[2] == "--latest")
+                                        Config.RevertCommand.Run(StovetopBackup.GetLatestBackup());
+                                    else if (!string.IsNullOrEmpty(args[2]))
+                                        Config.RevertCommand.Run(args[2]);
+                                }
+                                else
+                                {
+                                    StovetopCore.STOVETOP_LOGGER.Error("Please specify a backup ID (e.g. [date]-stovetop-backup.jsom");
+                                }
+                                break;
+                        }
                     }
-                    break;
-                case "backup":
-                    StovetopBackup.ViewBackups();
+                    else
+                    {
+                        BackupCommand.Run();
+                    } 
+
                     break;
             }
         }

@@ -5,15 +5,6 @@ namespace Stovetop.stovetop;
 
 public class StovetopConfig
 {
-    public enum PrintMode
-    {
-        All,
-        Profiles,
-        Aliases,
-        Hooks,
-        Commands
-    }
-    
     [JsonPropertyName("project")] public string Project { get; set; } = "";
     [JsonPropertyName("workingDirectory")] public string WorkingDirectory { get; set; } = "";
     [JsonPropertyName("runtime")] public string Runtime { get; set; } = "";
@@ -21,8 +12,6 @@ public class StovetopConfig
     [JsonPropertyName("buildCommand")] public string BuildCommand { get; set; } = "";
     [JsonPropertyName("aliases")] public Dictionary<string, string> Aliases { get; set; } = new();
     [JsonPropertyName("profiles")] public string[] Profiles { get; set; } =  Array.Empty<string>();
-
-    // hooks
     [JsonPropertyName("hooks")] public string HookPath { get; set; } = $"{StovetopCore.STOVETOP_CONFIG_ROOT}/scripts/hooks";
     
     public static StovetopConfig Load(string file = ".stove/stovetop.json")

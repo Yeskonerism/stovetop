@@ -86,7 +86,8 @@ public class StovetopBackup
         {
             string fileName = Path.GetFileName(backup);
             string backupId = fileName.Replace("-stovetop-backup.json", "");
-        
+            
+            // TODO | Show "latest" after displaying backup ID if its the most recent backup
             if (showInfo)
             {
                 var fileInfo = new FileInfo(backup);
