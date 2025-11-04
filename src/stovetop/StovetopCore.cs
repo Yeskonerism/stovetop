@@ -1,85 +1,86 @@
-using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Stovetop.stovetop;
 
-//
-// StovetopCore.cs
-// A publicly accessible class containing all relevant Stovetop
-// information (such as the config path)
-//
-// Oliver Hughes
-// 22-oct-25 
-//
 public static class StovetopCore
 {
-    public static string STOVETOP_ROOT;
-    public static string STOVETOP_CONFIG_ROOT;
-    public static string STOVETOP_CONFIG_PATH;
-    public static bool STOVETOP_CONFIG_EXISTS;
-    public static StovetopConfig STOVETOP_CONFIG;
-    public static StovetopLogger STOVETOP_LOGGER;
-    public static string STOVETOP_RUNTIME;
+    public static string? StovetopRoot;
+    public static string? StovetopConfigRoot;
+    public static string? StovetopConfigPath;
+    public static bool StovetopConfigExists;
+    public static StovetopConfig? StovetopConfig;
+    public static StovetopLogger? StovetopLogger;
+    public static string? StovetopRuntime;
     
-    public static void Initialize()
+    public static string? StovetopBackupRoot;
+    public static string? StovetopScriptRoot;
+    
+    public static void Initialize(bool ignoreConfig = false)
     {
-        STOVETOP_ROOT = Directory.GetCurrentDirectory();
-        STOVETOP_CONFIG_ROOT = Path.Combine(STOVETOP_ROOT, ".stove");
-        STOVETOP_CONFIG_PATH =  Path.Combine(STOVETOP_CONFIG_ROOT, "stovetop.json");
+        StovetopRoot = Directory.GetCurrentDirectory();
+        StovetopConfigRoot = Path.Combine(StovetopRoot, ".stove");
+        StovetopConfigPath =  Path.Combine(StovetopConfigRoot, "stovetop.json");
+        
+        StovetopBackupRoot = Path.Combine(StovetopConfigRoot, "cache/backups");
+        StovetopScriptRoot = Path.Combine(StovetopConfigRoot, "scripts");
 
         SetupLogger();
-        VerifyConfig();
 
-        if (STOVETOP_CONFIG_EXISTS)
+        if (!ignoreConfig)
         {
-            LoadConfig();
-            STOVETOP_RUNTIME = STOVETOP_CONFIG.Runtime;
+            if (VerifyConfig())
+            {
+                LoadConfig();
+                StovetopRuntime = StovetopConfig?.Runtime;
+            }
         }
     }
 
-    public static bool VerifyConfig(bool backup = false)
+    public static bool VerifyConfig()
     {
-        STOVETOP_CONFIG_EXISTS = File.Exists(STOVETOP_CONFIG_PATH);
-        if(!backup)
-            STOVETOP_LOGGER.Info(STOVETOP_CONFIG_EXISTS ? "Main Config Verified" : "Main Config Not Verified");
-        else
-            STOVETOP_LOGGER.Info(STOVETOP_CONFIG_EXISTS ? "Backup Verified" : "Backup Not Verified");
+        StovetopConfigExists = File.Exists(StovetopConfigPath);
+        StovetopLogger?.Info(StovetopConfigExists ? "Main Config Verified" : "Main Config Not Verified");
         
-        return STOVETOP_CONFIG_EXISTS;
+        return StovetopConfigExists;
     }
 
     public static void LoadConfig()
     {
-        string json = File.ReadAllText(STOVETOP_CONFIG_PATH);
-        STOVETOP_CONFIG = JsonSerializer.Deserialize<StovetopConfig>(json);
+        if (StovetopConfigPath != null)
+        {
+            string json = File.ReadAllText(StovetopConfigPath);
+            StovetopConfig = JsonSerializer.Deserialize<StovetopConfig>(json);
+        }
     }
 
     public static void SaveConfig()
     {
-        string json = JsonSerializer.Serialize(STOVETOP_CONFIG, new JsonSerializerOptions
+        string json = JsonSerializer.Serialize(StovetopConfig, new JsonSerializerOptions
         {
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.Never
         });
-        File.WriteAllText(STOVETOP_CONFIG_PATH, json);
-        STOVETOP_LOGGER.Success("Configuration saved successfully.");
+        if (StovetopConfigPath != null) File.WriteAllText(StovetopConfigPath, json);
+        StovetopLogger?.Success("Configuration saved successfully.");
     }
 
     public static void SetupLogger()
     {
-        STOVETOP_LOGGER = new StovetopLogger();
-        STOVETOP_LOGGER.Info("Logger initialized");
+        StovetopLogger = new StovetopLogger();
+        StovetopLogger.Info("Logger initialized");
     }
 
     public static void CreateDefaultStructure()
     {
-        Directory.CreateDirectory(STOVETOP_CONFIG_ROOT);
-            
-        Directory.CreateDirectory(STOVETOP_CONFIG_ROOT);
-        foreach (var subdir in new[] { "profiles", "cache", "cache/backups" })
-            Directory.CreateDirectory(Path.Combine(STOVETOP_CONFIG_ROOT, subdir));
-        
+        if (StovetopConfigRoot != null)
+        {
+            Directory.CreateDirectory(StovetopConfigRoot);
+
+            foreach (var subDirectory in new[] { "profiles", "cache", "cache/backups" })
+                Directory.CreateDirectory(Path.Combine(StovetopConfigRoot, subDirectory));
+        }
+
         StovetopHookHandler.CreateDefaultHookScripts();
     }
 }

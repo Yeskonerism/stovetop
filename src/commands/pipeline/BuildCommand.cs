@@ -7,32 +7,35 @@ public class BuildCommand
 {
     public static void Run()
     {
-        if (StovetopCore.STOVETOP_CONFIG_EXISTS)
+        if (StovetopCore.StovetopConfigExists)
         {
-            string[] args = CommandParser.ParseArguments(StovetopCore.STOVETOP_CONFIG.BuildCommand);
+            string[] arguments = CommandParser.ParseArguments(StovetopCore.StovetopConfig?.BuildCommand);
 
             var buildProcess = new ProcessStartInfo
             {
-                FileName = StovetopCore.STOVETOP_RUNTIME,
+                FileName = StovetopCore.StovetopRuntime,
                 UseShellExecute = false,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false,
             };
             
-            foreach (var arg in args)
+            foreach (var arg in arguments)
                 buildProcess.ArgumentList.Add(arg);
             
             StovetopHookHandler.ExecuteHook(HookType.PreBuild);
             
             var process = Process.Start(buildProcess);
+            if (process == null)
+            {
+                StovetopCore.StovetopLogger?.Error("Failed to start build process");
+                return;
+            }
             process.WaitForExit();
             
             StovetopHookHandler.ExecuteHook(HookType.PostBuild);
             
             if(process.ExitCode != 0)
-                StovetopCore.STOVETOP_LOGGER.Error(process.StandardError.ReadToEnd());
+                StovetopCore.StovetopLogger?.Error("$Stove failed to build your project. Exited with code: {process.ExitCode}");
             else
-                StovetopCore.STOVETOP_LOGGER.Success("Stove has cooked your project successfully. Serve with 'stove run'");
+                StovetopCore.StovetopLogger?.Success("Stove has cooked your project successfully. Serve with 'stove run'");
         }
     }
 }

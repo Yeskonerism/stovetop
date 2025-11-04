@@ -1,68 +1,57 @@
 using System.Text.Json;
+using Stovetop.Commands.Config;
 using Stovetop.stovetop;
 
 namespace Stovetop.Commands.Pipeline;
 
 public static class InitCommand
 {
-    public static void Run(string runtime)
+    public static void Run()
     {
         StovetopCore.CreateDefaultStructure();
         
-        StovetopCore.STOVETOP_CONFIG = new StovetopConfig
+        StovetopCore.StovetopConfig = new StovetopConfig
         {
             WorkingDirectory = Directory.GetCurrentDirectory()
         };
 
-        StovetopCore.STOVETOP_CONFIG.Project = Ask("[STOVE] Enter project name");
-        
-        string runtimeAsked = string.IsNullOrEmpty(runtime) ? Ask("[STOVE] Enter project runtime", "dotnet") : runtime;
-        StovetopCore.STOVETOP_CONFIG.Runtime = runtimeAsked;
-        
-        StovetopCore.STOVETOP_CONFIG.RunCommand = Ask("[STOVE] Enter run command", "run --");
-        StovetopCore.STOVETOP_CONFIG.BuildCommand = Ask("[STOVE] Enter build command", "build");
+        StovetopCore.StovetopConfig.Project = StovetopInputHelper.Ask("[STOVE] Enter project name");
 
-        StovetopCore.STOVETOP_CONFIG.Aliases["r"] = "run";
-        StovetopCore.STOVETOP_CONFIG.Aliases["b"] = "build";
+        string runtime = CommandRegistry.GetPositionalArgument("init", 1) ?? "";
+        
+        string runtimeAsked = string.IsNullOrEmpty(runtime) ? StovetopInputHelper.Ask("[STOVE] Enter project runtime", "dotnet") : runtime;
+        StovetopCore.StovetopConfig.Runtime = runtimeAsked;
+        
+        StovetopCore.StovetopConfig.RunCommand = StovetopInputHelper.Ask("[STOVE] Enter run command", "run --");
+        StovetopCore.StovetopConfig.BuildCommand = StovetopInputHelper.Ask("[STOVE] Enter build command", "build");
 
-        if (StovetopCore.STOVETOP_CONFIG_EXISTS)
+        StovetopCore.StovetopConfig.Aliases["r"] = "run";
+        StovetopCore.StovetopConfig.Aliases["b"] = "build";
+
+        if (StovetopCore.StovetopConfigExists)
         {
-            Console.Write("[STOVE] Config already exists. Overwrite? [y/N] -> ");
-            var overwrite = (Console.ReadLine() ?? "").Trim().ToLower();
-            if (overwrite != "y")
+            if (!StovetopInputHelper.Confirm("[STOVE] Config already exists. Overwrite?", false))
             {
-                StovetopCore.STOVETOP_LOGGER.Warn("Aborted: existing configuration preserved.");
+                StovetopCore.StovetopLogger?.Warn("Aborted: existing configuration preserved.");
                 return;
             }
 
             // create a backup version if overwriting stove config file
-            StovetopBackup.CreateBackup();
+            BackupCommand.CreateBackup();
         }
-
-        Console.Write(
-            (StovetopCore.STOVETOP_CONFIG.Project != "")
-                ? $"[STOVE] Save config for {StovetopCore.STOVETOP_CONFIG.Project}? [Y/n] -> "
-                : "[STOVE] Save this stove config? [Y/n] -> "
-        );
-
-        var confirm = (Console.ReadLine() ?? "").Trim().ToLower();
-        if (string.IsNullOrEmpty(confirm) || confirm == "y")
+        
+        if (StovetopInputHelper.Confirm((StovetopCore.StovetopConfig.Project != "")
+            ? $"[STOVE] Save config for {StovetopCore.StovetopConfig.Project}?"
+            : "[STOVE] Save this stove config?"
+        ))
         {
             StovetopCore.SaveConfig();
-            StovetopCore.STOVETOP_LOGGER.Info($"Config saved to {StovetopCore.STOVETOP_CONFIG_PATH}");
-            StovetopCore.STOVETOP_LOGGER.Success("Stovetop ready! Use 'stove run' to test your setup.");
+            StovetopCore.StovetopLogger?.Info($"Config saved to {StovetopCore.StovetopConfigPath}");
+            StovetopCore.StovetopLogger?.Success("Stovetop ready! Use 'stove run' to test your setup.");
         }
         else
         {
-            StovetopCore.STOVETOP_LOGGER.Warn("Configuration process aborted.");
+            StovetopCore.StovetopLogger?.Warn("Configuration process aborted.");
         }
-    }
-
-    // Helper for consistent input handling
-    private static string Ask(string prompt, string defaultValue = "")
-    {
-        Console.Write(defaultValue != "" ? $"{prompt} (default: {defaultValue}) -> " : $"{prompt} -> ");
-        var input = Console.ReadLine()?.Trim();
-        return string.IsNullOrEmpty(input) ? defaultValue : input;
     }
 }

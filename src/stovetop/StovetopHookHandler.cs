@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using static System.Environment;
 
 namespace Stovetop.stovetop;
 
@@ -20,13 +21,13 @@ public static class StovetopHookHandler
         
         if (string.IsNullOrWhiteSpace(hookCommand))
         {
-            StovetopCore.STOVETOP_LOGGER.Debug($"No {hookType} hook configured, skipping");
+            StovetopCore.StovetopLogger?.Debug($"No {hookType} hook configured, skipping");
             return;
         }
 
         try
         {
-            StovetopCore.STOVETOP_LOGGER.Info($"Running {hookType} hook...");
+            StovetopCore.StovetopLogger?.Info($"Running {hookType} hook...");
             
             var (fileName, arguments) = ParseHookCommand(hookCommand);
             
@@ -36,13 +37,13 @@ public static class StovetopHookHandler
                 Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = false,
-                RedirectStandardError = false
+                RedirectStandardError = true
             };
 
             var process = Process.Start(hookProcess);
             if (process == null)
             {
-                StovetopCore.STOVETOP_LOGGER.Error($"{hookType} hook failed to start");
+                StovetopCore.StovetopLogger?.Error($"{hookType} hook failed to start");
                 return;
             }
 
@@ -51,34 +52,41 @@ public static class StovetopHookHandler
             if (process.ExitCode != 0)
             {
                 string error = process.StandardError.ReadToEnd();
-                StovetopCore.STOVETOP_LOGGER.Warn($"{hookType} hook exited with code {process.ExitCode}");
+                StovetopCore.StovetopLogger?.Warn($"{hookType} hook exited with code {process.ExitCode}");
                 if (!string.IsNullOrEmpty(error))
-                    StovetopCore.STOVETOP_LOGGER.Error(error);
+                    StovetopCore.StovetopLogger?.Error(error);
             }
             else
             {
-                StovetopCore.STOVETOP_LOGGER.Success($"{hookType} hook completed");
+                StovetopCore.StovetopLogger?.Success($"{hookType} hook completed");
             }
         }
         catch (Exception ex)
         {
-            StovetopCore.STOVETOP_LOGGER.Error($"{hookType} hook failed: {ex.Message}");
+            StovetopCore.StovetopLogger?.Error($"{hookType} hook failed: {ex.Message}");
         }
     }
 
     private static string? GetHookCommand(HookType hookType)
     {
-        if (StovetopCore.STOVETOP_CONFIG == null)
+        if (StovetopCore.StovetopConfig == null)
             return null;
 
-        return hookType switch
+        if (StovetopCore.StovetopConfigRoot != null)
         {
-            HookType.PreRun => StovetopCore.STOVETOP_CONFIG.HookPath + "/preRunHook.sh",
-            HookType.PostRun => StovetopCore.STOVETOP_CONFIG.HookPath + "/postRunHook.sh",
-            HookType.PreBuild => StovetopCore.STOVETOP_CONFIG.HookPath + "/preBuildHook.sh",
-            HookType.PostBuild => StovetopCore.STOVETOP_CONFIG.HookPath + "/postBuildHook.sh",
-            _ => null
-        };
+            string hookPath = Path.Combine(StovetopCore.StovetopConfigRoot, "scripts/hooks");
+
+            return hookType switch
+            {
+                HookType.PreRun => hookPath + "/preRunHook.sh",
+                HookType.PostRun => hookPath + "/postRunHook.sh",
+                HookType.PreBuild => hookPath + "/preBuildHook.sh",
+                HookType.PostBuild => hookPath + "/postBuildHook.sh",
+                _ => null
+            };
+        }
+
+        return null;
     }
 
     private static (string fileName, string arguments) ParseHookCommand(string command)
@@ -112,30 +120,33 @@ public static class StovetopHookHandler
 
     public static void CreateDefaultHookScripts()
     {
-        string scriptsDir = Path.Combine(StovetopCore.STOVETOP_CONFIG_ROOT, "scripts");
-        string hooksDir = Path.Combine(scriptsDir, "hooks");
+        if (StovetopCore.StovetopConfigRoot != null)
+        {
+            string scriptsDir = Path.Combine(StovetopCore.StovetopConfigRoot, "scripts");
+            string hooksDir = Path.Combine(scriptsDir, "hooks");
         
-        Directory.CreateDirectory(hooksDir);
+            Directory.CreateDirectory(hooksDir);
 
-        CreateHookScript(
-            Path.Combine(hooksDir, "preRunHook.sh"),
-            "#!/bin/bash\necho '[HOOK] Starting project...'"
-        );
+            CreateHookScript(
+                Path.Combine(hooksDir, "preRunHook.sh"),
+                "#!/bin/bash\necho '[HOOK] Starting project...'"
+            );
 
-        CreateHookScript(
-            Path.Combine(hooksDir, "postRunHook.sh"),
-            "#!/bin/bash\necho '[HOOK] Project finished.'"
-        );
+            CreateHookScript(
+                Path.Combine(hooksDir, "postRunHook.sh"),
+                "#!/bin/bash\necho '[HOOK] Project finished.'"
+            );
         
-        CreateHookScript(
-            Path.Combine(hooksDir, "preBuildHook.sh"),
-            "#!/bin/bash\necho '[HOOK] Project building...'"
-        );
+            CreateHookScript(
+                Path.Combine(hooksDir, "preBuildHook.sh"),
+                "#!/bin/bash\necho '[HOOK] Project building...'"
+            );
         
-        CreateHookScript(
-            Path.Combine(hooksDir, "postBuildHook.sh"),
-            "#!/bin/bash\necho '[HOOK] Project built.'"
-        );
+            CreateHookScript(
+                Path.Combine(hooksDir, "postBuildHook.sh"),
+                "#!/bin/bash\necho '[HOOK] Project built.'"
+            );
+        }
     }
 
     private static void CreateHookScript(string path, string content)
@@ -145,7 +156,7 @@ public static class StovetopHookHandler
             File.WriteAllText(path, content);
             
             // Make executable on Unix systems
-            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            if (OSVersion.Platform == PlatformID.Unix)
             {
                 var chmod = Process.Start("chmod", $"+x {path}");
                 chmod?.WaitForExit();

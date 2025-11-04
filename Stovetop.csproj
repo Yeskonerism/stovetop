@@ -9,7 +9,10 @@
 
     <ItemGroup>
       <Folder Include="screenshots\" />
-      <Folder Include="testing\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="personal\CommandParserBACKUP.cs" />
     </ItemGroup>
 
 </Project>

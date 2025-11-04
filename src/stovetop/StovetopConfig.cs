@@ -11,8 +11,6 @@ public class StovetopConfig
     [JsonPropertyName("runCommand")] public string RunCommand { get; set; } = "";
     [JsonPropertyName("buildCommand")] public string BuildCommand { get; set; } = "";
     [JsonPropertyName("aliases")] public Dictionary<string, string> Aliases { get; set; } = new();
-    [JsonPropertyName("profiles")] public string[] Profiles { get; set; } =  Array.Empty<string>();
-    [JsonPropertyName("hooks")] public string HookPath { get; set; } = $"{StovetopCore.STOVETOP_CONFIG_ROOT}/scripts/hooks";
     
     public static StovetopConfig Load(string file = ".stove/stovetop.json")
     {
@@ -26,8 +24,6 @@ public class StovetopConfig
             throw new Exception("[STOVE] Invalid stovetop.json: missing runtime or run command");
 
         config.Aliases ??= new Dictionary<string, string>();
-        config.Profiles ??= Array.Empty<string>();
-        config.HookPath ??= "";
         
         return config;
     }
