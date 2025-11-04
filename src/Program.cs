@@ -7,12 +7,11 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        bool ignoreConfig = args.Contains("init") || args.Contains("help");
-        
-        StovetopCore.Initialize(ignoreConfig);
-        
         CommandRegistry.PassArguments(args);
         
+        bool ignoreConfig = args.Contains("init") || args.Contains("i") || args.Contains("help") || args.Contains("h");
+        
+        StovetopCore.Initialize(ignoreConfig);
         CommandParser.ParseCommands(args, ignoreConfig);
     }
 }

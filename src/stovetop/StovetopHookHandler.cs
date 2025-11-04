@@ -122,30 +122,31 @@ public static class StovetopHookHandler
     {
         if (StovetopCore.StovetopConfigRoot != null)
         {
-            string scriptsDir = Path.Combine(StovetopCore.StovetopConfigRoot, "scripts");
-            string hooksDir = Path.Combine(scriptsDir, "hooks");
-        
-            Directory.CreateDirectory(hooksDir);
+            // Create default hook scripts
+            if (StovetopCore.StovetopScriptRoot != null)
+            {
+                string hooksDir = Path.Combine(StovetopCore.StovetopScriptRoot, "hooks");
 
-            CreateHookScript(
-                Path.Combine(hooksDir, "preRunHook.sh"),
-                "#!/bin/bash\necho '[HOOK] Starting project...'"
-            );
+                CreateHookScript(
+                    Path.Combine(hooksDir, "preRunHook.sh"),
+                    "#!/bin/bash\necho '[HOOK] Starting project...'"
+                );
 
-            CreateHookScript(
-                Path.Combine(hooksDir, "postRunHook.sh"),
-                "#!/bin/bash\necho '[HOOK] Project finished.'"
-            );
+                CreateHookScript(
+                    Path.Combine(hooksDir, "postRunHook.sh"),
+                    "#!/bin/bash\necho '[HOOK] Project finished.'"
+                );
         
-            CreateHookScript(
-                Path.Combine(hooksDir, "preBuildHook.sh"),
-                "#!/bin/bash\necho '[HOOK] Project building...'"
-            );
+                CreateHookScript(
+                    Path.Combine(hooksDir, "preBuildHook.sh"),
+                    "#!/bin/bash\necho '[HOOK] Project building...'"
+                );
         
-            CreateHookScript(
-                Path.Combine(hooksDir, "postBuildHook.sh"),
-                "#!/bin/bash\necho '[HOOK] Project built.'"
-            );
+                CreateHookScript(
+                    Path.Combine(hooksDir, "postBuildHook.sh"),
+                    "#!/bin/bash\necho '[HOOK] Project built.'"
+                );
+            }
         }
     }
 

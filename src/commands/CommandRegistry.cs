@@ -15,11 +15,11 @@ public class CommandRegistry
         Commands = new List<StovetopCommand>();
         
         // register all commands
-        RegisterCommand("init", "Initialize a new project", "stove init [runtime]", "pipeline", InitCommand.Run, new[] {"i"});
-        RegisterCommand("run", "Run the project", "stove run", "pipeline", RunCommand.Run, new[] {"r"});
-        RegisterCommand("build", "Build the project", "stove build", "pipeline", BuildCommand.Run, new[] {"b","bld"});
-        RegisterCommand("backup", "Create a backup of the current config", "stove backup", "config", BackupCommand.Run, new[] {"bak","bkp"});
-        RegisterCommand("help", "Show this help message", "stove help", "user", HelpCommand.Run, new[] {"h"});
+        RegisterCommand("init", "Initialize a new project", "stove init [runtime]", "pipeline", InitCommand.Run, ["i"]);
+        RegisterCommand("run", "Run the project", "stove run", "pipeline", RunCommand.Run, ["r"]);
+        RegisterCommand("build", "Build the project", "stove build", "pipeline", BuildCommand.Run, ["b","bld"]);
+        RegisterCommand("backup", "Create a backup of the current config", "stove backup", "config", BackupCommand.Run, ["bak","bkp"]);
+        RegisterCommand("help", "Show this help message", "stove help", "user", HelpCommand.Run, ["h"]);
     }
     
     public static void RegisterCommand(string name, string desc, string usage, string category, Action command, string[]? aliases = null)

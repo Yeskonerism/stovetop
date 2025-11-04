@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Stovetop.Commands.Config;
 using Stovetop.stovetop;
 
@@ -32,6 +33,17 @@ public class CommandParser
                         ExecuteWithOptionalBackup(command);
                     else
                         command.Command?.Invoke();
+                    return;
+                }
+            }
+            
+            if(StovetopCore.StovetopConfig != null && StovetopCore.StovetopConfig.Aliases.ContainsKey(commandName))
+            {
+                string? resolvedCommand = StovetopCore.StovetopConfig.Aliases[commandName];
+                if (resolvedCommand != null)
+                {
+                    StovetopCore.StovetopLogger?.Info($"Alias '{commandName}' resolved to '{resolvedCommand}'");
+                    ExecuteShellCommand(resolvedCommand);
                     return;
                 }
             }
@@ -73,6 +85,19 @@ public class CommandParser
             args.Add(currentToken);
 
         return args.ToArray();
+    }
+
+    private static void ExecuteShellCommand(string command)
+    {
+        var process = new ProcessStartInfo
+        {
+            FileName = "/bin/bash",
+            Arguments = $"-c \"{command}\"",
+            UseShellExecute = false
+        };
+
+        var proc = Process.Start(process);
+        proc?.WaitForExit();
     }
     
     // Helper method to execute run/build commands with optional backup config
@@ -136,6 +161,7 @@ public class CommandParser
         }
     }
 
+    // Helper method to check if a command supports the --backup flag
     private static bool SupportsBackupFlag(string commandName)
     {
         return commandName == "run" || commandName == "build";

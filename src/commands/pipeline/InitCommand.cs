@@ -25,9 +25,6 @@ public static class InitCommand
         StovetopCore.StovetopConfig.RunCommand = StovetopInputHelper.Ask("[STOVE] Enter run command", "run --");
         StovetopCore.StovetopConfig.BuildCommand = StovetopInputHelper.Ask("[STOVE] Enter build command", "build");
 
-        StovetopCore.StovetopConfig.Aliases["r"] = "run";
-        StovetopCore.StovetopConfig.Aliases["b"] = "build";
-
         if (StovetopCore.StovetopConfigExists)
         {
             if (!StovetopInputHelper.Confirm("[STOVE] Config already exists. Overwrite?", false))

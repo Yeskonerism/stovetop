@@ -77,7 +77,7 @@ public static class StovetopCore
         {
             Directory.CreateDirectory(StovetopConfigRoot);
 
-            foreach (var subDirectory in new[] { "profiles", "cache", "cache/backups" })
+            foreach (var subDirectory in new[] { "profiles", "cache", "cache/backups", "scripts/user", "scripts/hooks" })
                 Directory.CreateDirectory(Path.Combine(StovetopConfigRoot, subDirectory));
         }
 

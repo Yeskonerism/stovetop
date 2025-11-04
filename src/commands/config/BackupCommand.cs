@@ -173,7 +173,7 @@ public class BackupCommand
     
     public static bool BackupExists(string backupId)
     {
-        return File.Exists(Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.json"));
+        return StovetopCore.StovetopBackupRoot != null && File.Exists(Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.json"));
     }
     
     // TODO | Clean backups method, with numbered limit, max/min date etc.
