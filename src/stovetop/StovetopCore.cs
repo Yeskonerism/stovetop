@@ -12,16 +12,16 @@ public static class StovetopCore
     public static StovetopConfig? StovetopConfig;
     public static StovetopLogger? StovetopLogger;
     public static string? StovetopRuntime;
-    
+
     public static string? StovetopBackupRoot;
     public static string? StovetopScriptRoot;
-    
+
     public static void Initialize(bool ignoreConfig = false)
     {
         StovetopRoot = Directory.GetCurrentDirectory();
         StovetopConfigRoot = Path.Combine(StovetopRoot, ".stove");
-        StovetopConfigPath =  Path.Combine(StovetopConfigRoot, "stovetop.json");
-        
+        StovetopConfigPath = Path.Combine(StovetopConfigRoot, "stovetop.json");
+
         StovetopBackupRoot = Path.Combine(StovetopConfigRoot, "cache/backups");
         StovetopScriptRoot = Path.Combine(StovetopConfigRoot, "scripts");
 
@@ -37,11 +37,15 @@ public static class StovetopCore
         }
     }
 
-    public static bool VerifyConfig()
+    public static bool VerifyConfig(bool ignoreConfig = false)
     {
         StovetopConfigExists = File.Exists(StovetopConfigPath);
-        StovetopLogger?.Info(StovetopConfigExists ? "Main Config Verified" : "Main Config Not Verified");
-        
+
+        if (!ignoreConfig)
+            StovetopLogger?.Info(
+                StovetopConfigExists ? "Main Config Verified" : "Main Config Not Verified"
+            );
+
         return StovetopConfigExists;
     }
 
@@ -56,12 +60,16 @@ public static class StovetopCore
 
     public static void SaveConfig()
     {
-        string json = JsonSerializer.Serialize(StovetopConfig, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.Never
-        });
-        if (StovetopConfigPath != null) File.WriteAllText(StovetopConfigPath, json);
+        string json = JsonSerializer.Serialize(
+            StovetopConfig,
+            new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+            }
+        );
+        if (StovetopConfigPath != null)
+            File.WriteAllText(StovetopConfigPath, json);
         StovetopLogger?.Success("Configuration saved successfully.");
     }
 
@@ -77,7 +85,16 @@ public static class StovetopCore
         {
             Directory.CreateDirectory(StovetopConfigRoot);
 
-            foreach (var subDirectory in new[] { "profiles", "cache", "cache/backups", "scripts/user", "scripts/hooks" })
+            foreach (
+                var subDirectory in new[]
+                {
+                    "profiles",
+                    "cache",
+                    "cache/backups",
+                    "scripts/user",
+                    "scripts/hooks",
+                }
+            )
                 Directory.CreateDirectory(Path.Combine(StovetopConfigRoot, subDirectory));
         }
 

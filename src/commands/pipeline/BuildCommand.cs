@@ -33,7 +33,7 @@ public class BuildCommand
             StovetopHookHandler.ExecuteHook(HookType.PostBuild);
             
             if(process.ExitCode != 0)
-                StovetopCore.StovetopLogger?.Error("$Stove failed to build your project. Exited with code: {process.ExitCode}");
+                StovetopCore.StovetopLogger?.Error($"Stove failed to build your project. Exited with code: {process.ExitCode}");
             else
                 StovetopCore.StovetopLogger?.Success("Stove has cooked your project successfully. Serve with 'stove run'");
         }

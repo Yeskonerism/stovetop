@@ -3,21 +3,15 @@ using Stovetop.stovetop;
 
 namespace Stovetop.Commands.Pipeline;
 
-//
-// RunCommand.cs
-// The class containing the necessary methods for running and building
-// a project from Stovetop's config file
-//
-// Oliver Hughes
-// 22-oct-25
-//
 public class RunCommand
 {
     public static void Run()
     {
         if (StovetopCore.StovetopConfig != null)
         {
-            string[] arguments = CommandParser.ParseArguments(StovetopCore.StovetopConfig.RunCommand);
+            string[] arguments = CommandParser.ParseArguments(
+                StovetopCore.StovetopConfig.RunCommand
+            );
 
             var runProcess = new ProcessStartInfo
             {
@@ -31,7 +25,7 @@ public class RunCommand
             StovetopHookHandler.ExecuteHook(HookType.PreRun);
 
             StovetopCore.StovetopLogger?.Info("Running main project...");
-            
+
             // run primary stove process
             var process = Process.Start(runProcess);
             if (process == null)
@@ -40,12 +34,14 @@ public class RunCommand
                 return;
             }
             process.WaitForExit();
-            
-            if(process.ExitCode != 0)
-                StovetopCore.StovetopLogger?.Error($"Stove has failed to run your project. Exited with code: {process.ExitCode}");
+
+            if (process.ExitCode != 0)
+                StovetopCore.StovetopLogger?.Error(
+                    $"Stove has failed to run your project. Exited with code: {process.ExitCode}"
+                );
             else
                 StovetopCore.StovetopLogger?.Success("Stove has served your project successfully.");
-            
+
             // post-run hook
             StovetopHookHandler.ExecuteHook(HookType.PostRun);
         }

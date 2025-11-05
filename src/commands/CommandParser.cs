@@ -20,37 +20,42 @@ public class CommandParser
             return;
         }
 
-        if (args.Length > 0)
+        // Only check the first argument (the command) - this will change later to support multiple command calls
+        string commandName = args[0].ToLower();
+
+        foreach (var command in CommandRegistry.Commands)
         {
-            // Only check the first argument (the command) - this will change later to support multiple command calls
-            string commandName = args[0].ToLower();
-
-            foreach(var command in CommandRegistry.Commands)
+            if (
+                command.Aliases != null
+                && (command.Name == commandName || command.Aliases.Contains(commandName))
+            )
             {
-                if (command.Aliases != null && (command.Name == commandName || command.Aliases.Contains(commandName)))
-                {
-                    if (command.Name != null && SupportsBackupFlag(command.Name))
-                        ExecuteWithOptionalBackup(command);
+                if (command.Name != null && SupportsBackupFlag(command.Name))
+                    if(command == CommandRegistry.GetCommand("config"))
+                        ExecuteWithOptionalBackup(command, 2);
                     else
-                        command.Command?.Invoke();
-                    return;
-                }
+                        ExecuteWithOptionalBackup(command);
+                else
+                    command.Command?.Invoke();
+                return;
             }
-            
-            if(StovetopCore.StovetopConfig != null && StovetopCore.StovetopConfig.Aliases.ContainsKey(commandName))
-            {
-                string? resolvedCommand = StovetopCore.StovetopConfig.Aliases[commandName];
-                if (resolvedCommand != null)
-                {
-                    StovetopCore.StovetopLogger?.Info($"Alias '{commandName}' resolved to '{resolvedCommand}'");
-                    ExecuteShellCommand(resolvedCommand);
-                    return;
-                }
-            }
-
-            // If we get here, command not found
-            StovetopCore.StovetopLogger?.Error($"Unknown command: {commandName}");
         }
+
+        if (
+            StovetopCore.StovetopConfig != null
+            && StovetopCore.StovetopConfig.Aliases.ContainsKey(commandName)
+        )
+        {
+            string? resolvedCommand = StovetopCore.StovetopConfig.Aliases[commandName];
+            StovetopCore.StovetopLogger?.Info(
+                $"Alias '{commandName}' resolved to '{resolvedCommand}'"
+            );
+            ExecuteShellCommand(resolvedCommand);
+            return;
+        }
+
+        // If we get here, command not found
+        StovetopCore.StovetopLogger?.Error($"Unknown command: {commandName}");
     }
 
     // parse command specific arguments from config
@@ -93,30 +98,38 @@ public class CommandParser
         {
             FileName = "/bin/bash",
             Arguments = $"-c \"{command}\"",
-            UseShellExecute = false
+            UseShellExecute = false,
         };
 
         var proc = Process.Start(process);
         proc?.WaitForExit();
     }
-    
+
     // Helper method to execute run/build commands with optional backup config
-    private static void ExecuteWithOptionalBackup(StovetopCommand command)
+    private static void ExecuteWithOptionalBackup(StovetopCommand command, int positionalArgumentIndex = 1)
     {
         // Check if backup flag is set (--backup)
-        if (command.Name != null && CommandRegistry.GetPositionalArgument(command.Name, 1) == "--backup")
+        if (
+            command.Name != null
+            && CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex) == "--backup"
+        )
         {
-            string? positionalArgument = CommandRegistry.GetPositionalArgument(command.Name, 2);
+            string? positionalArgument = CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex+1);
 
             // Handle missing backup ID
             if (string.IsNullOrEmpty(positionalArgument))
             {
-                StovetopCore.StovetopLogger?.Error("Please specify a backup ID or 'latest' (e.g., stove run --backup latest)");
+                StovetopCore.StovetopLogger?.Error(
+                    "Please specify a backup ID or 'latest' (e.g., stove run --backup latest)"
+                );
                 return;
             }
 
             // Resolve "latest" to actual backup ID
-            string? backupId = positionalArgument == "latest" ? BackupCommand.GetLatestBackup() : positionalArgument;
+            string? backupId =
+                positionalArgument == "latest"
+                    ? BackupCommand.GetLatestBackup()
+                    : positionalArgument;
 
             // Validate backup exists
             if (!BackupCommand.BackupExists(backupId!))
@@ -133,7 +146,10 @@ public class CommandParser
             }
 
             // Build path to back up config
-            string pathToBackupConfig = Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.json");
+            string pathToBackupConfig = Path.Combine(
+                StovetopCore.StovetopBackupRoot,
+                $"{backupId}-stovetop-backup.json"
+            );
             string? originalConfigPath = StovetopCore.StovetopConfigPath;
 
             try
@@ -164,6 +180,6 @@ public class CommandParser
     // Helper method to check if a command supports the --backup flag
     private static bool SupportsBackupFlag(string commandName)
     {
-        return commandName == "run" || commandName == "build";
+        return commandName == "run" || commandName == "build" || commandName == "config";
     }
 }
