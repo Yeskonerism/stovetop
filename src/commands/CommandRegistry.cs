@@ -1,5 +1,6 @@
 using Stovetop.Commands.Config;
 using Stovetop.Commands.Pipeline;
+using Stovetop.commands.user;
 using Stovetop.stovetop;
 
 namespace Stovetop.Commands;

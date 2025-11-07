@@ -31,10 +31,7 @@ public class CommandParser
             )
             {
                 if (command.Name != null && SupportsBackupFlag(command.Name))
-                    if(command == CommandRegistry.GetCommand("config"))
-                        ExecuteWithOptionalBackup(command, 2);
-                    else
-                        ExecuteWithOptionalBackup(command);
+                    ExecuteWithOptionalBackup(command, GetBackupFlagIndex() != -1 ? GetBackupFlagIndex() : 1);
                 else
                     command.Command?.Invoke();
                 return;
@@ -56,6 +53,18 @@ public class CommandParser
 
         // If we get here, command not found
         StovetopCore.StovetopLogger?.Error($"Unknown command: {commandName}");
+    }
+
+    private static int GetBackupFlagIndex()
+    {
+        if (CommandRegistry.CurrentArgs != null)
+            for (int i = 0; i < CommandRegistry.CurrentArgs.Length; i++)
+            {
+                if (CommandRegistry.CurrentArgs[i] == "--backup")
+                    return i;
+            }
+
+        return -1;
     }
 
     // parse command specific arguments from config
@@ -106,15 +115,22 @@ public class CommandParser
     }
 
     // Helper method to execute run/build commands with optional backup config
-    private static void ExecuteWithOptionalBackup(StovetopCommand command, int positionalArgumentIndex = 1)
+    private static void ExecuteWithOptionalBackup(
+        StovetopCommand command,
+        int positionalArgumentIndex = 1
+    )
     {
         // Check if backup flag is set (--backup)
         if (
             command.Name != null
-            && CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex) == "--backup"
+            && CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex)
+                == "--backup"
         )
         {
-            string? positionalArgument = CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex+1);
+            string? positionalArgument = CommandRegistry.GetPositionalArgument(
+                command.Name,
+                positionalArgumentIndex + 1
+            );
 
             // Handle missing backup ID
             if (string.IsNullOrEmpty(positionalArgument))

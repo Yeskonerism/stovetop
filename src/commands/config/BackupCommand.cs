@@ -16,7 +16,10 @@ public class BackupCommand
             case "revert":
                 HandleRevert();
                 break;
-            default:
+            case "clean":
+                CleanBackups();
+                break;
+            default:  
                 CreateBackup();
                 break;
         }
@@ -212,5 +215,8 @@ public class BackupCommand
     }
 
     // TODO | Clean backups method, with numbered limit, max/min date etc.
-    public static void CleanBackups() { }
+    public static void CleanBackups()
+    {
+        Console.WriteLine("Cleaning backups");
+    }
 }

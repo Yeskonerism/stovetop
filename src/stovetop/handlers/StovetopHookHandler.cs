@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using static System.Environment;
 
-namespace Stovetop.stovetop;
+namespace Stovetop.stovetop.handlers;
 
 public enum HookType
 {
@@ -10,7 +10,7 @@ public enum HookType
     PreBuild,
     PostBuild,
     PreDeploy,
-    PostDeploy
+    PostDeploy,
 }
 
 public static class StovetopHookHandler
@@ -18,7 +18,7 @@ public static class StovetopHookHandler
     public static void ExecuteHook(HookType hookType)
     {
         string? hookCommand = GetHookCommand(hookType);
-        
+
         if (string.IsNullOrWhiteSpace(hookCommand))
         {
             StovetopCore.StovetopLogger?.Debug($"No {hookType} hook configured, skipping");
@@ -28,16 +28,16 @@ public static class StovetopHookHandler
         try
         {
             StovetopCore.StovetopLogger?.Info($"Running {hookType} hook...");
-            
+
             var (fileName, arguments) = ParseHookCommand(hookCommand);
-            
+
             var hookProcess = new ProcessStartInfo
             {
                 FileName = fileName,
                 Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = false,
-                RedirectStandardError = true
+                RedirectStandardError = true,
             };
 
             var process = Process.Start(hookProcess);
@@ -52,7 +52,9 @@ public static class StovetopHookHandler
             if (process.ExitCode != 0)
             {
                 string error = process.StandardError.ReadToEnd();
-                StovetopCore.StovetopLogger?.Warn($"{hookType} hook exited with code {process.ExitCode}");
+                StovetopCore.StovetopLogger?.Warn(
+                    $"{hookType} hook exited with code {process.ExitCode}"
+                );
                 if (!string.IsNullOrEmpty(error))
                     StovetopCore.StovetopLogger?.Error(error);
             }
@@ -82,7 +84,7 @@ public static class StovetopHookHandler
                 HookType.PostRun => hookPath + "/postRunHook.sh",
                 HookType.PreBuild => hookPath + "/preBuildHook.sh",
                 HookType.PostBuild => hookPath + "/postBuildHook.sh",
-                _ => null
+                _ => null,
             };
         }
 
@@ -92,7 +94,7 @@ public static class StovetopHookHandler
     private static (string fileName, string arguments) ParseHookCommand(string command)
     {
         command = command.Trim();
-        
+
         // Handle quoted filenames: "my script.sh" arg1 arg2
         if (command.StartsWith('"'))
         {
@@ -113,7 +115,7 @@ public static class StovetopHookHandler
             string arguments = command.Substring(firstSpace + 1);
             return (fileName, arguments);
         }
-        
+
         // No arguments (yet!)
         return (command, "");
     }
@@ -136,12 +138,12 @@ public static class StovetopHookHandler
                     Path.Combine(hooksDir, "postRunHook.sh"),
                     "#!/bin/bash\necho '[HOOK] Project finished.'"
                 );
-        
+
                 CreateHookScript(
                     Path.Combine(hooksDir, "preBuildHook.sh"),
                     "#!/bin/bash\necho '[HOOK] Project building...'"
                 );
-        
+
                 CreateHookScript(
                     Path.Combine(hooksDir, "postBuildHook.sh"),
                     "#!/bin/bash\necho '[HOOK] Project built.'"
@@ -155,7 +157,7 @@ public static class StovetopHookHandler
         if (!File.Exists(path))
         {
             File.WriteAllText(path, content);
-            
+
             // Make executable on Unix systems
             if (OSVersion.Platform == PlatformID.Unix)
             {

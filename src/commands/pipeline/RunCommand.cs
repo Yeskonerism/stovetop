@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Stovetop.stovetop;
+using Stovetop.stovetop.handlers;
 
 namespace Stovetop.Commands.Pipeline;
 
@@ -24,9 +25,9 @@ public class RunCommand
 
             StovetopHookHandler.ExecuteHook(HookType.PreRun);
 
+            // run primary stove process
             StovetopCore.StovetopLogger?.Info("Running main project...");
 
-            // run primary stove process
             var process = Process.Start(runProcess);
             if (process == null)
             {

@@ -1,13 +1,12 @@
-namespace Stovetop.stovetop;
+namespace Stovetop.stovetop.handlers;
 
-public class StovetopInputHelper
+public class StovetopInputHandler
 {
     public static string Ask(string prompt, string defaultValue = "")
     {
         Console.Write(
-            defaultValue != "" 
-                ? $"{prompt} (default: {defaultValue}) -> " 
-                : $"{prompt} -> ");
+            defaultValue != "" ? $"{prompt} (default: {defaultValue}) -> " : $"{prompt} -> "
+        );
         var input = Console.ReadLine()?.Trim();
         return string.IsNullOrEmpty(input) ? defaultValue : input;
     }
@@ -16,12 +15,12 @@ public class StovetopInputHelper
     {
         string defaultHint = defaultYes ? "[Y/n]" : "[y/N]";
         Console.Write($"{prompt} {defaultHint} -> ");
-        
+
         var input = Console.ReadLine()?.Trim().ToLower();
-        
+
         if (string.IsNullOrEmpty(input))
             return defaultYes;
-        
+
         return input == "y" || input == "yes";
     }
 }

@@ -1,10 +1,10 @@
+using Stovetop.Commands;
 using Stovetop.stovetop;
 
-namespace Stovetop.Commands;
+namespace Stovetop.commands.user;
 
 public class HelpCommand
 {
-    // TODO | Manage CommandRegistry
     public static void Run()
     {
         string? commandArgument = CommandRegistry.GetPositionalArgument("help", 1);

@@ -30,7 +30,6 @@ public class ConfigCommand
             return;
         }
 
-        // TODO | Allow for backup viewing as well (stove config view --backup [backup])
         var config = StovetopCore.StovetopConfig!;
 
         var flags = new Dictionary<string[], Action>
@@ -53,7 +52,7 @@ public class ConfigCommand
         };
 
         bool foundFlags = false;
-        
+
         // search for flags
         foreach (var flag in flags)
         {
@@ -71,7 +70,7 @@ public class ConfigCommand
         }
 
         // if no flags are found, print all
-        if(!foundFlags)
+        if (!foundFlags)
             PrintAll(config);
     }
 
