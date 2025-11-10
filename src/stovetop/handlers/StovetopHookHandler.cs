@@ -162,7 +162,7 @@ public static class StovetopHookHandler
             if (OSVersion.Platform == PlatformID.Unix)
             {
                 var chmod = Process.Start("chmod", $"+x {path}");
-                chmod?.WaitForExit();
+                chmod.WaitForExit();
             }
         }
     }

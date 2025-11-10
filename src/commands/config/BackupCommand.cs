@@ -111,7 +111,7 @@ public class BackupCommand
         }
     }
 
-    private static string? ParseBackupDate(string backupId)
+    private static string ParseBackupDate(string backupId)
     {
         string date = backupId.Replace("-stovetop-backup.json", "");
 

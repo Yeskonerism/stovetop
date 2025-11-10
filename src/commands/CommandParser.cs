@@ -16,7 +16,7 @@ public class CommandParser
         if (args.Length == 0)
         {
             var helpCommand = CommandRegistry.GetCommand("help");
-            helpCommand?.Command?.Invoke();
+            helpCommand?.Command.Invoke();
             return;
         }
 
@@ -30,10 +30,10 @@ public class CommandParser
                 && (command.Name == commandName || command.Aliases.Contains(commandName))
             )
             {
-                if (command.Name != null && SupportsBackupFlag(command.Name))
+                if (SupportsBackupFlag(command.Name))
                     ExecuteWithOptionalBackup(command, GetBackupFlagIndex() != -1 ? GetBackupFlagIndex() : 1);
                 else
-                    command.Command?.Invoke();
+                    command.Command.Invoke();
                 return;
             }
         }
@@ -43,7 +43,7 @@ public class CommandParser
             && StovetopCore.StovetopConfig.Aliases.ContainsKey(commandName)
         )
         {
-            string? resolvedCommand = StovetopCore.StovetopConfig.Aliases[commandName];
+            string resolvedCommand = StovetopCore.StovetopConfig.Aliases[commandName];
             StovetopCore.StovetopLogger?.Info(
                 $"Alias '{commandName}' resolved to '{resolvedCommand}'"
             );
@@ -122,8 +122,7 @@ public class CommandParser
     {
         // Check if backup flag is set (--backup)
         if (
-            command.Name != null
-            && CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex)
+            CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex)
                 == "--backup"
         )
         {
@@ -177,7 +176,7 @@ public class CommandParser
                 StovetopCore.StovetopRuntime = StovetopCore.StovetopConfig?.Runtime;
 
                 // Execute the command
-                command.Command?.Invoke();
+                command.Command.Invoke();
             }
             finally
             {
@@ -189,7 +188,7 @@ public class CommandParser
         else
         {
             // No backup flag, execute normally
-            command.Command?.Invoke();
+            command.Command.Invoke();
         }
     }
 

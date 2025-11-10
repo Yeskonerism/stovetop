@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Stovetop.stovetop;
 
+// TODO | Environment variables
 public class StovetopConfig
 {
     [JsonPropertyName("project")]
@@ -54,8 +55,49 @@ public class StovetopConfig
         )
             throw new Exception("[STOVE] Invalid stovetop.json: missing runtime or run command");
 
-        config.Aliases ??= new Dictionary<string, string>();
-
         return config;
+    }
+
+    public StovetopConfig Clone()
+    {
+        StovetopConfig clone = new()
+        {
+            Project = StovetopCore.StovetopConfig!.Project,
+            WorkingDirectory = StovetopCore.StovetopConfig.WorkingDirectory,
+            Runtime = StovetopCore.StovetopConfig.Runtime,
+            RunCommand = StovetopCore.StovetopConfig.RunCommand,
+            BuildCommand = StovetopCore.StovetopConfig.BuildCommand,
+            Aliases = StovetopCore.StovetopConfig.Aliases,
+        };
+
+        return clone;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is StovetopConfig config &&
+               Project == config.Project &&
+               WorkingDirectory == config.WorkingDirectory &&
+               Runtime == config.Runtime &&
+               RunCommand == config.RunCommand &&
+               BuildCommand == config.BuildCommand &&
+               Aliases == config.Aliases;
+    }
+
+    protected bool Equals(StovetopConfig other)
+    {
+        return Project == other.Project && WorkingDirectory == other.WorkingDirectory && Runtime == other.Runtime && RunCommand == other.RunCommand && BuildCommand == other.BuildCommand && Aliases.Equals(other.Aliases);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Project, WorkingDirectory, Runtime, RunCommand, BuildCommand, Aliases);
+    }
+
+    public static bool VerifyRuntime()
+    {
+        // TODO | Runtime verification with "which/where" command and stdout + stderr redirect and reading
+        
+        return true;
     }
 }

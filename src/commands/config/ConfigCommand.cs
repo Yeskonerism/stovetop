@@ -1,28 +1,13 @@
 using Stovetop.stovetop;
+using Stovetop.stovetop.handlers;
 
 namespace Stovetop.Commands.Config;
 
 public class ConfigCommand
 {
+    private static bool _hasChanges;
+
     public static void Run()
-    {
-        string? subcommand = CommandRegistry.GetSubcommand("config", "view");
-
-        switch (subcommand?.ToLower())
-        {
-            case "view" or "v":
-                ViewConfig();
-                break;
-            case "edit" or "e":
-                EditConfig();
-                break;
-            default:
-                ViewConfig();
-                break;
-        }
-    }
-
-    private static void ViewConfig()
     {
         if (!StovetopCore.VerifyConfig(true))
         {
@@ -39,18 +24,36 @@ public class ConfigCommand
                 ["--working-directory", "-wd"],
                 () => PrintValue(("Working Directory", config.WorkingDirectory))
             },
-            { ["--runtime", "-r"], () => PrintValue(("Runtime", config.Runtime)) },
+            { ["--runtime", "-rt"], () => PrintValue(("Runtime", config.Runtime)) },
             {
-                ["--run", "-rc", "--run-command"],
+                ["--run", "-r", "-rc", "--run-command"],
                 () => PrintValue(("Run Command", config.RunCommand))
             },
             {
-                ["--build", "-bc", "--build-command"],
+                ["--build", "-b", "-bc", "--build-command"],
                 () => PrintValue(("Build Command", config.BuildCommand))
             },
             { ["--aliases", "-a"], () => PrintAliases(config.Aliases) },
         };
 
+        string? subcommand = CommandRegistry.GetSubcommand("config", "view");
+
+        switch (subcommand?.ToLower())
+        {
+            case "view" or "v":
+                ViewConfig(config, flags);
+                break;
+            case "edit" or "e":
+                EditConfig(config);
+                break;
+            default:
+                ViewConfig(config, flags);
+                break;
+        }
+    }
+
+    private static void ViewConfig(StovetopConfig config, Dictionary<string[], Action> flags)
+    {
         bool foundFlags = false;
 
         // search for flags
@@ -130,25 +133,195 @@ public class ConfigCommand
         Console.WriteLine();
     }
 
-    private static void EditConfig()
+    private static void EditConfig(StovetopConfig config)
     {
-        // TODO | Implement config editing
-        // this will get positional arguments to switch config editing mode
-        // possible FOR FUTURE read values from file
+        bool looping = true;
 
-        /* examples
-         * stove config edit (cli editing mode)
-         * stove config edit aliases
-         * stove config edit aliases --add test "dotnet test --verbosity normal"
-         * stove config edit runtime
-         * stove config edit runtime --set dotnet
-         * stove config edit build-command
-         * stove config edit run-command
-        */
+        // print title
+        Console.WriteLine("Stovetop Configuration Editor V.0.5\n");
 
-        // 1. determine config edit mode
+        // initialise a temporary config
+        // this is what will get all the changes applied to
+        StovetopConfig tempConfig = config.Clone();
 
-        // 2. determine config edit action
-        // 3. execute action
+        var editModes = new Dictionary<string[], Action>
+        {
+            {
+                ["runtime", "rt"],
+                () => tempConfig.Runtime = EditValue("runtime", tempConfig.Runtime)
+            },
+            {
+                ["run", "r", "rc", "run-command"],
+                () => tempConfig.RunCommand = EditValue("run command", tempConfig.RunCommand)
+            },
+            {
+                ["build", "b", "bc", "build-command"],
+                () => tempConfig.BuildCommand = EditValue("build command", tempConfig.BuildCommand)
+            },
+            {
+                ["name", "n"],
+                () => tempConfig.Project = EditValue("project name", tempConfig.Project)
+            },
+            {
+                ["aliases", "a"],
+                () =>
+                    tempConfig.Aliases = EditAliases(
+                        new Dictionary<string, string>(tempConfig.Aliases)
+                    )
+            },
+            {
+                ["exit", "quit", "q", "e"],
+                () =>
+                    looping = ExitConfigEditor(
+                        tempConfig,
+                        _hasChanges
+                            && StovetopInputHandler.Confirm("Would you like to save your changes?")
+                    )
+            },
+            { ["save"], () => SaveConfig(tempConfig) },
+            { ["view", "list", "v", "ls"], () => PrintAll(tempConfig) },
+        };
+
+        PrintHelpMenu(editModes);
+
+        while (looping)
+        {
+            _hasChanges = !config.Equals(tempConfig);
+
+            string editMode = StovetopInputHandler.Ask("What would you like to do?");
+
+            foreach (var mode in editModes)
+            {
+                if (mode.Key.Contains(editMode))
+                {
+                    mode.Value.Invoke();
+                }
+            }
+
+            if (editMode == "h" || editMode == "help")
+                PrintHelpMenu(editModes);
+        }
+    }
+
+    private static string EditValue(string prompt, string defaultValue)
+    {
+        string returnValue = StovetopInputHandler.Ask($"\tEnter new {prompt}", defaultValue);
+
+        if (!string.IsNullOrEmpty(returnValue))
+            FeedbackOnEdit(prompt, defaultValue, returnValue);
+
+        return (!string.IsNullOrEmpty(returnValue)) ? returnValue : defaultValue;
+    }
+
+    private static void FeedbackOnEdit(string key, string originalValue, string newValue)
+    {
+        if (originalValue != newValue)
+            StovetopCore.StovetopLogger?.Info(
+                $"'{key}' has been edited from {originalValue} to {newValue}"
+            );
+        else
+            StovetopCore.StovetopLogger?.Info($"'{key}' has not been changed");
+    }
+
+    private static Dictionary<string, string> EditAliases(Dictionary<string, string> configAliases)
+    {
+        Dictionary<string, string> aliases = configAliases;
+
+        while (true)
+        {
+            string mode = StovetopInputHandler.Ask("(Aliases) What would you like to do?");
+
+            string aliasName = "";
+            string aliasValue = "";
+
+            switch (mode)
+            {
+                case "add" or "a":
+                    aliases.Add(
+                        aliasName = StovetopInputHandler.Ask("\tEnter alias name"),
+                        aliasValue = StovetopInputHandler.Ask("\tEnter alias command")
+                    );
+
+                    StovetopCore.StovetopLogger?.Info($"Alias {aliasName} added with value {aliasValue}.");
+                    break;
+                case "set" or "s":
+                    aliases[aliasName = StovetopInputHandler.Ask("\tEnter alias name")] =
+                        (aliasValue = StovetopInputHandler.Ask("\tEnter alias command"));
+
+                    StovetopCore.StovetopLogger?.Info($"Alias '{aliasName}' set to '{aliasValue}'");
+                    break;
+                case "remove" or "rm" or "del":
+                    aliases.Remove(aliasName = StovetopInputHandler.Ask("\tEnter alias name"));
+
+                    StovetopCore.StovetopLogger?.Info($"Alias '{aliasName}' removed");
+                    break;
+                case "view" or "list" or "ls" or "v":
+                    PrintAliases(aliases);
+                    break;
+                case "e" or "exit" or "quit" or "q":
+                    if (
+                        StovetopInputHandler.Confirm(
+                            "Are you sure you want to exit? All changes will be lost.",
+                            false
+                        )
+                    )
+                        return configAliases;
+                    else
+                        break;
+                case "save":
+                    return aliases;
+                default:
+                    Console.WriteLine("Invalid mode:\n\tadd\n\tset\n\tremove\n\tview");
+                    break;
+            }
+        }
+    }
+
+    private static void PrintHelpMenu(Dictionary<string[], Action> editModes)
+    {
+        // help menu
+        Console.WriteLine("Help Menu:");
+
+        foreach (var mode in editModes)
+        {
+            Console.WriteLine($"\t{mode.Key[0]}");
+        }
+
+        Console.WriteLine("\tsave\n\texit\n\thelp\n\tview");
+    }
+
+    private static void SaveConfig(StovetopConfig config)
+    {
+        if (_hasChanges)
+        {
+            StovetopCore.StovetopConfig = config;
+            StovetopCore.SaveConfig();
+        }
+        else
+            StovetopCore.StovetopLogger?.Info("There are no changes to save.");
+    }
+
+    private static bool ExitConfigEditor(
+        StovetopConfig tempConfig,
+        bool save = false
+    )
+    {
+        if (!_hasChanges) return false;
+        if (!save)
+        {
+            if (
+                !StovetopInputHandler.Confirm(
+                    "Are you sure you want to exit? All changes will be lost.",
+                    false
+                )
+            )
+                return true;
+        }
+        else
+        {
+            SaveConfig(tempConfig);
+        }
+
+        return false;
     }
 }

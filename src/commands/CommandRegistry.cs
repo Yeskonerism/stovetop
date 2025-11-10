@@ -114,8 +114,7 @@ public class CommandRegistry
 
     private static bool MatchesCommand(StovetopCommand command, string name)
     {
-        return command.Name != null
-            && command.Aliases != null
+        return command.Aliases != null
             && (
                 command.Name.Equals(name, StringComparison.OrdinalIgnoreCase)
                 || command.Aliases.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase))
