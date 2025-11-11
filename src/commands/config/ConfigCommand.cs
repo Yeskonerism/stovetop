@@ -17,6 +17,26 @@ public class ConfigCommand
 
         var config = StovetopCore.StovetopConfig!;
 
+        
+
+        string? subcommand = CommandRegistry.GetSubcommand("config", "view");
+
+        switch (subcommand?.ToLower())
+        {
+            case "view" or "v":
+                ViewConfig(config);
+                break;
+            case "edit" or "e":
+                EditConfig(config);
+                break;
+            default:
+                ViewConfig(config);
+                break;
+        }
+    }
+
+    private static void ViewConfig(StovetopConfig config)
+    {
         var flags = new Dictionary<string[], Action>
         {
             { ["--name", "-n"], () => PrintValue(("Name", config.Project)) },
@@ -35,25 +55,7 @@ public class ConfigCommand
             },
             { ["--aliases", "-a"], () => PrintAliases(config.Aliases) },
         };
-
-        string? subcommand = CommandRegistry.GetSubcommand("config", "view");
-
-        switch (subcommand?.ToLower())
-        {
-            case "view" or "v":
-                ViewConfig(config, flags);
-                break;
-            case "edit" or "e":
-                EditConfig(config);
-                break;
-            default:
-                ViewConfig(config, flags);
-                break;
-        }
-    }
-
-    private static void ViewConfig(StovetopConfig config, Dictionary<string[], Action> flags)
-    {
+        
         bool foundFlags = false;
 
         // search for flags
@@ -135,6 +137,8 @@ public class ConfigCommand
 
     private static void EditConfig(StovetopConfig config)
     {
+        _hasChanges = false;
+        
         bool looping = true;
 
         // print title

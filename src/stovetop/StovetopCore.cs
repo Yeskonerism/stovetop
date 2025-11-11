@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Stovetop.stovetop.handlers;
+using static System.Environment;
 
 namespace Stovetop.stovetop;
 
@@ -34,6 +36,10 @@ public static class StovetopCore
             {
                 LoadConfig();
                 StovetopRuntime = StovetopConfig?.Runtime;
+            }
+            else
+            {
+                StovetopLogger?.Error("No config found");
             }
         }
     }
@@ -100,5 +106,35 @@ public static class StovetopCore
         }
 
         StovetopHookHandler.CreateDefaultHookScripts();
+    }
+
+    public static bool VerifyRuntime()
+    {
+        // TODO | Runtime verification with "which/where" command and stdout + stderr redirect and reading
+        ProcessStartInfo startInfo = new()
+        {
+            Arguments = StovetopRuntime,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        if (OSVersion.Platform == PlatformID.Unix)
+            startInfo.FileName = "which";
+        else if (OSVersion.Platform == PlatformID.Win32NT)
+            startInfo.FileName = "where";
+
+        using (Process? process = Process.Start(startInfo))
+        {
+            process?.WaitForExit();
+            if (process != null && process.ExitCode != 0)
+            {
+                StovetopLogger?.Error($"Runtime '{StovetopRuntime}' not found.");
+                return false;
+            }
+        }
+
+        return true;
     }
 }

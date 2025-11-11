@@ -6,3 +6,7 @@ riderModule.iml
 personal/
 
 .idea/
+
+gitdiff.txt
+
+*.sln.DotSettings.user

@@ -93,11 +93,4 @@ public class StovetopConfig
     {
         return HashCode.Combine(Project, WorkingDirectory, Runtime, RunCommand, BuildCommand, Aliases);
     }
-
-    public static bool VerifyRuntime()
-    {
-        // TODO | Runtime verification with "which/where" command and stdout + stderr redirect and reading
-        
-        return true;
-    }
 }
