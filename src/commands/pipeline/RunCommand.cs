@@ -10,7 +10,7 @@ public class RunCommand
     {
         // verify runtime exists
         if(!StovetopCore.VerifyRuntime()) return;
-
+        
         // Determine what to run: prefer executable if set, otherwise use runtime + runCommand
         string? fileName;
         string[] arguments;
@@ -44,7 +44,8 @@ public class RunCommand
         foreach (var arg in arguments)
             runProcess.ArgumentList.Add(arg);
 
-        StovetopHookHandler.ExecuteHook(HookType.PreRun);
+        if(!StovetopCore.RunHookless)
+            StovetopHookHandler.ExecuteHook(HookType.PreRun);
 
         // run primary stove process
         StovetopCore.StovetopLogger?.Info("Running main project...");
@@ -65,6 +66,7 @@ public class RunCommand
             StovetopCore.StovetopLogger?.Success("Stove has served your project successfully.");
 
         // post-run hook
-        StovetopHookHandler.ExecuteHook(HookType.PostRun);
+        if(!StovetopCore.RunHookless)
+            StovetopHookHandler.ExecuteHook(HookType.PostRun);
     }
 }

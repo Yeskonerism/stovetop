@@ -1,0 +1,17 @@
+project: dotnet-template
+version: 0.0.1
+stovetop:
+  variables: {}
+  runtime:
+    type: dotnet
+    version:
+  commands:
+    build: build
+    run: run --
+    executable:
+    test:
+    clean:
+    deploy:
+  aliases: {}
+  hooks:
+  profiles: 

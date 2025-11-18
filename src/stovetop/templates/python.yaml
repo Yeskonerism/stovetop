@@ -1,0 +1,17 @@
+project: python-template
+version: 0.0.1
+stovetop:
+  variables: {}
+  runtime:
+    type: python
+    version:
+  commands:
+    build:
+    run: main.py
+    executable:
+    test:
+    clean:
+    deploy:
+  aliases: {}
+  hooks:
+  profiles: 

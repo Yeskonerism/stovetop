@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Stovetop.Commands;
 using Stovetop.stovetop.config;
 using Stovetop.stovetop.handlers;
 using YamlDotNet.Serialization;
@@ -22,6 +23,10 @@ public static class StovetopCore
     public static string? StovetopBackupRoot;
     public static string? StovetopScriptRoot;
 
+    public static bool RunSilent;
+    public static bool RunVerbose;
+    public static bool RunHookless;
+
     public static void Initialize(bool ignoreConfig = false)
     {
         StovetopRoot = Directory.GetCurrentDirectory();
@@ -30,6 +35,20 @@ public static class StovetopCore
 
         StovetopBackupRoot = Path.Combine(StovetopConfigRoot, "cache/backups");
         StovetopScriptRoot = Path.Combine(StovetopConfigRoot, "scripts");
+        
+        RunSilent = CommandRegistry.CurrentArgs != null && (
+            CommandRegistry.CurrentArgs.Contains("-s")
+            || CommandRegistry.CurrentArgs.Contains("--silent")
+        );
+        RunVerbose = CommandRegistry.CurrentArgs != null && (
+            CommandRegistry.CurrentArgs.Contains("-v")
+            || CommandRegistry.CurrentArgs.Contains("--verbose")
+        );
+        RunHookless = CommandRegistry.CurrentArgs != null && (
+            CommandRegistry.CurrentArgs.Contains("--no-hooks")
+            || CommandRegistry.CurrentArgs.Contains("-nh")
+            || CommandRegistry.CurrentArgs.Contains("--hookless")
+        );
 
         SetupLogger();
 

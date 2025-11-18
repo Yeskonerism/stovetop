@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Stovetop.Commands;
 using static System.Environment;
 
 namespace Stovetop.stovetop.handlers;
@@ -36,7 +37,7 @@ public static class StovetopHookHandler
                 FileName = fileName,
                 Arguments = arguments,
                 UseShellExecute = false,
-                RedirectStandardOutput = false,
+                RedirectStandardOutput = StovetopCore.RunSilent,
                 RedirectStandardError = true,
             };
 

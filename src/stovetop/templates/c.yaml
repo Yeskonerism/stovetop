@@ -1,0 +1,17 @@
+project: c-template
+version: 0.0.1
+stovetop:
+  variables: {}
+  runtime:
+    type: gcc
+    version:
+  commands:
+    build: src/main.c -o bin/app
+    run:
+    executable: bin/app
+    test:
+    clean:
+    deploy:
+  aliases: {}
+  hooks:
+  profiles: 

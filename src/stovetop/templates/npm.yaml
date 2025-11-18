@@ -1,0 +1,17 @@
+project: npm-template
+version: 0.0.1
+stovetop:
+  variables: {}
+  runtime:
+    type: npm
+    version:
+  commands:
+    build: run build
+    run: run dev
+    executable:
+    test:
+    clean:
+    deploy: run deploy
+  aliases: {}
+  hooks:
+  profiles: 
