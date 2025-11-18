@@ -1,7 +1,10 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Stovetop.stovetop.config;
 using Stovetop.stovetop.handlers;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 using static System.Environment;
 
 namespace Stovetop.stovetop;
@@ -23,7 +26,7 @@ public static class StovetopCore
     {
         StovetopRoot = Directory.GetCurrentDirectory();
         StovetopConfigRoot = Path.Combine(StovetopRoot, ".stove");
-        StovetopConfigPath = Path.Combine(StovetopConfigRoot, "stovetop.json");
+        StovetopConfigPath = Path.Combine(StovetopConfigRoot, "stovetop.config.yaml");
 
         StovetopBackupRoot = Path.Combine(StovetopConfigRoot, "cache/backups");
         StovetopScriptRoot = Path.Combine(StovetopConfigRoot, "scripts");
@@ -35,7 +38,7 @@ public static class StovetopCore
             if (VerifyConfig())
             {
                 LoadConfig();
-                StovetopRuntime = StovetopConfig?.Runtime;
+                StovetopRuntime = StovetopConfig?.Stovetop.Runtime.Type;
             }
             else
             {
@@ -60,23 +63,27 @@ public static class StovetopCore
     {
         if (StovetopConfigPath != null)
         {
-            string json = File.ReadAllText(StovetopConfigPath);
-            StovetopConfig = JsonSerializer.Deserialize<StovetopConfig>(json);
+            string yaml = File.ReadAllText(StovetopConfigPath);
+
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+
+            StovetopConfig = deserializer.Deserialize<StovetopConfig>(yaml);
         }
     }
 
     public static void SaveConfig()
     {
-        string json = JsonSerializer.Serialize(
-            StovetopConfig,
-            new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-            }
-        );
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .Build();
+
+        string yaml = serializer.Serialize(StovetopConfig);
+
         if (StovetopConfigPath != null)
-            File.WriteAllText(StovetopConfigPath, json);
+            File.WriteAllText(StovetopConfigPath, yaml);
+
         StovetopLogger?.Success("Configuration saved successfully.");
     }
 

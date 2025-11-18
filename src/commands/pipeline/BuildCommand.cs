@@ -9,11 +9,14 @@ public class BuildCommand
     public static void Run()
     {
         // verify runtime exists
-        if(!StovetopCore.VerifyRuntime()) return;
-        
-        string[] arguments = CommandParser.ParseArguments(
-            StovetopCore.StovetopConfig?.BuildCommand
+        if (!StovetopCore.VerifyRuntime())
+            return;
+
+        string buildCommand = StovetopVariableHandler.SubstituteVariables(
+            StovetopCore.StovetopConfig?.Stovetop.Commands.Build ?? ""
         );
+
+        string[] arguments = CommandParser.ParseArguments(buildCommand);
 
         var buildProcess = new ProcessStartInfo
         {
@@ -26,6 +29,8 @@ public class BuildCommand
 
         StovetopHookHandler.ExecuteHook(HookType.PreBuild);
 
+        StovetopCore.StovetopLogger?.Info("Starting build process...");
+
         var process = Process.Start(buildProcess);
         if (process == null)
         {
@@ -34,15 +39,18 @@ public class BuildCommand
         }
         process.WaitForExit();
 
-        StovetopHookHandler.ExecuteHook(HookType.PostBuild);
-
         if (process.ExitCode != 0)
             StovetopCore.StovetopLogger?.Error(
                 $"Stove failed to build your project. Exited with code: {process.ExitCode}"
             );
-        else
+
+        StovetopHookHandler.ExecuteHook(HookType.PostBuild);
+
+        if (process.ExitCode == 0)
+        {
             StovetopCore.StovetopLogger?.Success(
                 "Stove has cooked your project successfully. Serve with 'stove run'"
             );
+        }
     }
 }

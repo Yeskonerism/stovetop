@@ -10,14 +10,34 @@ public class RunCommand
     {
         // verify runtime exists
         if(!StovetopCore.VerifyRuntime()) return;
-        
-        string[] arguments = CommandParser.ParseArguments(
-            StovetopCore.StovetopConfig?.RunCommand
-        );
+
+        // Determine what to run: prefer executable if set, otherwise use runtime + runCommand
+        string? fileName;
+        string[] arguments;
+
+        if (!string.IsNullOrEmpty(StovetopCore.StovetopConfig?.Stovetop.Commands.Executable))
+        {
+            // Running a compiled executable directly
+            string executable = StovetopVariableHandler.SubstituteVariables(
+                StovetopCore.StovetopConfig.Stovetop.Commands.Executable
+            );
+            StovetopCore.StovetopLogger?.Info($"Using executable: {executable}");
+            fileName = executable;
+            arguments = Array.Empty<string>(); // Executables typically don't need runtime args
+        }
+        else
+        {
+            // Running with a runtime (e.g., dotnet, python, node)
+            fileName = StovetopCore.StovetopRuntime;
+            string runCommand = StovetopVariableHandler.SubstituteVariables(
+                StovetopCore.StovetopConfig?.Stovetop.Commands.Run ?? ""
+            );
+            arguments = CommandParser.ParseArguments(runCommand);
+        }
 
         var runProcess = new ProcessStartInfo
         {
-            FileName = StovetopCore.StovetopRuntime,
+            FileName = fileName,
             UseShellExecute = false,
         };
 

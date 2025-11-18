@@ -1,3 +1,5 @@
+using Stovetop.stovetop.config;
+
 namespace Stovetop.stovetop.handlers;
 
 public class StovetopProfileHandler

@@ -1,4 +1,5 @@
 using Stovetop.stovetop;
+using Stovetop.stovetop.config;
 using Stovetop.stovetop.handlers;
 
 namespace Stovetop.Commands.Config;
@@ -40,20 +41,22 @@ public class ConfigCommand
         var flags = new Dictionary<string[], Action>
         {
             { ["--name", "-n"], () => PrintValue(("Name", config.Project)) },
-            {
-                ["--working-directory", "-wd"],
-                () => PrintValue(("Working Directory", config.WorkingDirectory))
-            },
-            { ["--runtime", "-rt"], () => PrintValue(("Runtime", config.Runtime)) },
+            { ["--version", "-v"], () => PrintValue(("Version", config.Version)) },
+            { ["--runtime", "-rt"], () => PrintValue(("Runtime", config.Stovetop.Runtime.Type)) },
             {
                 ["--run", "-r", "-rc", "--run-command"],
-                () => PrintValue(("Run Command", config.RunCommand))
+                () => PrintValue(("Run Command", config.Stovetop.Commands.Run))
+            },
+            {
+                ["--executable", "-e", "-exec"],
+                () => PrintValue(("Executable", config.Stovetop.Commands.Executable ?? ""))
             },
             {
                 ["--build", "-b", "-bc", "--build-command"],
-                () => PrintValue(("Build Command", config.BuildCommand))
+                () => PrintValue(("Build Command", config.Stovetop.Commands.Build))
             },
-            { ["--aliases", "-a"], () => PrintAliases(config.Aliases) },
+            { ["--aliases", "-a"], () => PrintAliases(config.Stovetop.Aliases) },
+            { ["--variables", "--vars"], () => PrintVariables(config.Stovetop.Variables) },
         };
         
         bool foundFlags = false;
@@ -87,22 +90,62 @@ public class ConfigCommand
         // print project information
         PrintSection(
             "Project Information",
-            new[] { ("Name", config.Project), ("Working Directory", config.WorkingDirectory) }
+            new[] { ("Name", config.Project), ("Version", config.Version) }
         );
 
         // print runtime information
-        PrintSection(
-            "Runtime Information",
-            new[]
-            {
-                ("Runtime", config.Runtime),
-                ("Run Command", config.RunCommand),
-                ("Build Command", config.BuildCommand),
-            }
-        );
+        var runtimeInfo = new List<(string key, string value)>
+        {
+            ("Type", config.Stovetop.Runtime.Type),
+        };
+
+        if (!string.IsNullOrEmpty(config.Stovetop.Runtime.Version))
+        {
+            runtimeInfo.Add(("Version", config.Stovetop.Runtime.Version));
+        }
+
+        PrintSection("Runtime", runtimeInfo.ToArray());
+
+        // print commands
+        var commandsInfo = new List<(string key, string value)>
+        {
+            ("Build", config.Stovetop.Commands.Build),
+            ("Run", config.Stovetop.Commands.Run),
+        };
+
+        if (!string.IsNullOrEmpty(config.Stovetop.Commands.Executable))
+        {
+            commandsInfo.Add(("Executable", config.Stovetop.Commands.Executable));
+        }
+
+        if (!string.IsNullOrEmpty(config.Stovetop.Commands.Test))
+        {
+            commandsInfo.Add(("Test", config.Stovetop.Commands.Test));
+        }
+
+        if (!string.IsNullOrEmpty(config.Stovetop.Commands.Clean))
+        {
+            commandsInfo.Add(("Clean", config.Stovetop.Commands.Clean));
+        }
+
+        if (!string.IsNullOrEmpty(config.Stovetop.Commands.Deploy))
+        {
+            commandsInfo.Add(("Deploy", config.Stovetop.Commands.Deploy));
+        }
+
+        PrintSection("Commands", commandsInfo.ToArray());
+
+        // print variables
+        if (config.Stovetop.Variables.Count > 0)
+        {
+            PrintVariables(config.Stovetop.Variables);
+        }
 
         // print aliases
-        PrintAliases(config.Aliases);
+        if (config.Stovetop.Aliases.Count > 0)
+        {
+            PrintAliases(config.Stovetop.Aliases);
+        }
     }
 
     private static void PrintValue((string key, string value) item)
@@ -135,6 +178,21 @@ public class ConfigCommand
         Console.WriteLine();
     }
 
+    private static void PrintVariables(Dictionary<string, string> variables)
+    {
+        Console.WriteLine("Variables: ");
+        if (variables.Count == 0)
+        {
+            Console.WriteLine("\tNo variables found");
+            return;
+        }
+        foreach (var variable in variables)
+        {
+            Console.WriteLine($"\t{variable.Key}: {variable.Value}");
+        }
+        Console.WriteLine();
+    }
+
     private static void EditConfig(StovetopConfig config)
     {
         _hasChanges = false;
@@ -152,25 +210,36 @@ public class ConfigCommand
         {
             {
                 ["runtime", "rt"],
-                () => tempConfig.Runtime = EditValue("runtime", tempConfig.Runtime)
+                () => tempConfig.Stovetop.Runtime.Type = EditValue("runtime type", tempConfig.Stovetop.Runtime.Type)
             },
             {
                 ["run", "r", "rc", "run-command"],
-                () => tempConfig.RunCommand = EditValue("run command", tempConfig.RunCommand)
+                () => tempConfig.Stovetop.Commands.Run = EditValue("run command", tempConfig.Stovetop.Commands.Run)
             },
             {
                 ["build", "b", "bc", "build-command"],
-                () => tempConfig.BuildCommand = EditValue("build command", tempConfig.BuildCommand)
+                () => tempConfig.Stovetop.Commands.Build = EditValue("build command", tempConfig.Stovetop.Commands.Build)
             },
             {
                 ["name", "n"],
                 () => tempConfig.Project = EditValue("project name", tempConfig.Project)
             },
             {
+                ["version", "ver"],
+                () => tempConfig.Version = EditValue("version", tempConfig.Version)
+            },
+            {
                 ["aliases", "a"],
                 () =>
-                    tempConfig.Aliases = EditAliases(
-                        new Dictionary<string, string>(tempConfig.Aliases)
+                    tempConfig.Stovetop.Aliases = EditAliases(
+                        new Dictionary<string, string>(tempConfig.Stovetop.Aliases)
+                    )
+            },
+            {
+                ["variables", "vars"],
+                () =>
+                    tempConfig.Stovetop.Variables = EditVariables(
+                        new Dictionary<string, string>(tempConfig.Stovetop.Variables)
                     )
             },
             {
@@ -274,6 +343,60 @@ public class ConfigCommand
                         break;
                 case "save":
                     return aliases;
+                default:
+                    Console.WriteLine("Invalid mode:\n\tadd\n\tset\n\tremove\n\tview");
+                    break;
+            }
+        }
+    }
+
+    private static Dictionary<string, string> EditVariables(Dictionary<string, string> configVariables)
+    {
+        Dictionary<string, string> variables = configVariables;
+
+        while (true)
+        {
+            string mode = StovetopInputHandler.Ask("(Variables) What would you like to do?");
+
+            string varName = "";
+            string varValue = "";
+
+            switch (mode)
+            {
+                case "add" or "a":
+                    variables.Add(
+                        varName = StovetopInputHandler.Ask("\tEnter variable name"),
+                        varValue = StovetopInputHandler.Ask("\tEnter variable value")
+                    );
+
+                    StovetopCore.StovetopLogger?.Info($"Variable {varName} added with value {varValue}.");
+                    break;
+                case "set" or "s":
+                    variables[varName = StovetopInputHandler.Ask("\tEnter variable name")] =
+                        (varValue = StovetopInputHandler.Ask("\tEnter variable value"));
+
+                    StovetopCore.StovetopLogger?.Info($"Variable '{varName}' set to '{varValue}'");
+                    break;
+                case "remove" or "rm" or "del":
+                    variables.Remove(varName = StovetopInputHandler.Ask("\tEnter variable name"));
+
+                    StovetopCore.StovetopLogger?.Info($"Variable '{varName}' removed");
+                    break;
+                case "view" or "list" or "ls" or "v":
+                    PrintVariables(variables);
+                    break;
+                case "e" or "exit" or "quit" or "q":
+                    if (
+                        StovetopInputHandler.Confirm(
+                            "Are you sure you want to exit? All changes will be lost.",
+                            false
+                        )
+                    )
+                        return configVariables;
+                    else
+                        break;
+                case "save":
+                    return variables;
                 default:
                     Console.WriteLine("Invalid mode:\n\tadd\n\tset\n\tremove\n\tview");
                     break;

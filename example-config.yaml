@@ -1,0 +1,96 @@
+# Example Stovetop Configuration File
+# This demonstrates the new YAML structure
+
+project: MyAwesomeProject
+version: 1.0.0
+
+stovetop:
+  # Project-specific variables (can be referenced in commands using ${VAR})
+  variables:
+    SRC: src
+    OUT: bin
+    BIN: bin
+    OBJ: obj
+    TEST: tests
+
+  # Runtime configuration
+  runtime:
+    type: dotnet           # The runtime/compiler to use
+    version: net9.0        # Optional: runtime version
+
+  # Build and run commands
+  commands:
+    build: build
+    run: run --
+    executable: ""         # For compiled languages: path to output binary
+    test: test             # Optional
+    clean: clean           # Optional
+    deploy: ""             # Optional
+    
+  # Command aliases (shortcuts)
+  aliases:
+    t: dotnet test
+    c: dotnet clean
+    watch: dotnet watch run
+    
+  # Hooks (currently file-based, stored in .stove/scripts/hooks/)
+  hooks: null
+    
+  # Build profiles (for future use)
+  profiles: null
+
+
+---
+# Example for a C project with variables
+
+project: MyCApp
+version: 1.0.0
+
+stovetop:
+  variables:
+    SRC: src
+    OUT: bin
+    CFLAGS: -Wall -Wextra -O2
+
+  runtime:
+    type: gcc
+    version: "11.0"
+
+  commands:
+    build: gcc ${CFLAGS} ${SRC}/*.c -o ${OUT}/app
+    run: ""
+    executable: ${OUT}/app
+    clean: rm -rf ${OUT}
+    test: gcc ${SRC}/test.c -o ${OUT}/test && ${OUT}/test
+    
+  aliases:
+    debug: gcc -g ${SRC}/*.c -o ${OUT}/app-debug
+    valgrind: valgrind ${OUT}/app
+
+
+---
+# Example for a React project
+
+project: MyReactApp
+version: 2.1.0
+
+stovetop:
+  variables:
+    PORT: "3000"
+    NODE_ENV: development
+    
+  runtime:
+    type: npm
+    
+  commands:
+    build: run build
+    run: run dev
+    test: run test
+    clean: run clean
+    deploy: run deploy
+    
+  aliases:
+    start: npm start
+    lint: npm run lint
+    format: npm run format
+

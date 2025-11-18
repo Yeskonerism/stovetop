@@ -15,4 +15,8 @@
       <Compile Remove="personal\CommandParserBACKUP.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="YamlDotnet" Version="16.3.0" />
+    </ItemGroup>
+
 </Project>

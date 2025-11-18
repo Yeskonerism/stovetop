@@ -40,10 +40,10 @@ public class CommandParser
 
         if (
             StovetopCore.StovetopConfig != null
-            && StovetopCore.StovetopConfig.Aliases.ContainsKey(commandName)
+            && StovetopCore.StovetopConfig.Stovetop.Aliases.ContainsKey(commandName)
         )
         {
-            string resolvedCommand = StovetopCore.StovetopConfig.Aliases[commandName];
+            string resolvedCommand = StovetopCore.StovetopConfig.Stovetop.Aliases[commandName];
             StovetopCore.StovetopLogger?.Info(
                 $"Alias '{commandName}' resolved to '{resolvedCommand}'"
             );
@@ -173,7 +173,7 @@ public class CommandParser
                 StovetopCore.StovetopConfigPath = pathToBackupConfig;
                 StovetopCore.StovetopLogger?.Info($"Using backup config: {backupId}");
                 StovetopCore.LoadConfig();
-                StovetopCore.StovetopRuntime = StovetopCore.StovetopConfig?.Runtime;
+                StovetopCore.StovetopRuntime = StovetopCore.StovetopConfig?.Stovetop.Runtime.Type;
 
                 // Execute the command
                 command.Command.Invoke();
