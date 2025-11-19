@@ -8,10 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="screenshots\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Compile Remove="personal\CommandParserBACKUP.cs" />
     </ItemGroup>
 
@@ -21,6 +17,10 @@
 
     <ItemGroup>
       <EmbeddedResource Include="src\stovetop\templates\*.yaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Wasabi\Wasabi.csproj" />
     </ItemGroup>
 
 </Project>

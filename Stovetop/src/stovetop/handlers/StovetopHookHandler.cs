@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Stovetop.Commands;
+using Wasabi;
 using static System.Environment;
 
 namespace Stovetop.stovetop.handlers;
@@ -28,41 +28,17 @@ public static class StovetopHookHandler
 
         try
         {
-            StovetopCore.StovetopLogger?.Info($"Running {hookType} hook...");
+            if (StovetopCore.RunVerbose)
+                StovetopCore.StovetopLogger?.Info($"Running {hookType} hook...");
 
-            var (fileName, arguments) = ParseHookCommand(hookCommand);
+            var variables = StovetopCore.StovetopConfig?.Stovetop.Variables ?? new();
+            variables["PROJECT"] = StovetopCore.StovetopConfig?.Project ?? "";
+            variables["VERSION"] = StovetopCore.StovetopConfig?.Version ?? "";
+            
+            if(StovetopCore.RunSilent)
+                variables["silent"] = "true";
 
-            var hookProcess = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = StovetopCore.RunSilent,
-                RedirectStandardError = true,
-            };
-
-            var process = Process.Start(hookProcess);
-            if (process == null)
-            {
-                StovetopCore.StovetopLogger?.Error($"{hookType} hook failed to start");
-                return;
-            }
-
-            process.WaitForExit();
-
-            if (process.ExitCode != 0)
-            {
-                string error = process.StandardError.ReadToEnd();
-                StovetopCore.StovetopLogger?.Warn(
-                    $"{hookType} hook exited with code {process.ExitCode}"
-                );
-                if (!string.IsNullOrEmpty(error))
-                    StovetopCore.StovetopLogger?.Error(error);
-            }
-            else
-            {
-                StovetopCore.StovetopLogger?.Success($"{hookType} hook completed");
-            }
+            WasabiInterpreter.Execute(hookCommand, variables);
         }
         catch (Exception ex)
         {
@@ -81,10 +57,10 @@ public static class StovetopHookHandler
 
             return hookType switch
             {
-                HookType.PreRun => hookPath + "/preRunHook.sh",
-                HookType.PostRun => hookPath + "/postRunHook.sh",
-                HookType.PreBuild => hookPath + "/preBuildHook.sh",
-                HookType.PostBuild => hookPath + "/postBuildHook.sh",
+                HookType.PreRun => hookPath + "/pre-run.wasabi",
+                HookType.PostRun => hookPath + "/post-run.wasabi",
+                HookType.PreBuild => hookPath + "/pre-build.wasabi",
+                HookType.PostBuild => hookPath + "/post-build.wasabi",
                 _ => null,
             };
         }
@@ -131,23 +107,23 @@ public static class StovetopHookHandler
                 string hooksDir = Path.Combine(StovetopCore.StovetopScriptRoot, "hooks");
 
                 CreateHookScript(
-                    Path.Combine(hooksDir, "preRunHook.sh"),
-                    "#!/bin/bash\necho '[HOOK] Starting project...'"
+                    Path.Combine(hooksDir, "pre-run.wasabi"),
+                    "log.info 'Project starting...'"
                 );
 
                 CreateHookScript(
-                    Path.Combine(hooksDir, "postRunHook.sh"),
-                    "#!/bin/bash\necho '[HOOK] Project finished.'"
+                    Path.Combine(hooksDir, "post-run.wasabi"),
+                    "log.info 'Project finished.'"
                 );
 
                 CreateHookScript(
-                    Path.Combine(hooksDir, "preBuildHook.sh"),
-                    "#!/bin/bash\necho '[HOOK] Project building...'"
+                    Path.Combine(hooksDir, "pre-build.wasabi"),
+                    "log.info 'Project building...'"
                 );
 
                 CreateHookScript(
-                    Path.Combine(hooksDir, "postBuildHook.sh"),
-                    "#!/bin/bash\necho '[HOOK] Project built.'"
+                    Path.Combine(hooksDir, "post-build.wasabi"),
+                    "log.info 'Project built.'"
                 );
             }
         }
@@ -158,13 +134,6 @@ public static class StovetopHookHandler
         if (!File.Exists(path))
         {
             File.WriteAllText(path, content);
-
-            // Make executable on Unix systems
-            if (OSVersion.Platform == PlatformID.Unix)
-            {
-                var chmod = Process.Start("chmod", $"+x {path}");
-                chmod.WaitForExit();
-            }
         }
     }
 }

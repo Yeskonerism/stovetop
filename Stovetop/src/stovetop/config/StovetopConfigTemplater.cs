@@ -16,7 +16,8 @@ public class StovetopConfigTemplater
         { "gcc", "c.yaml" },
         { "g++", "c.yaml" },
         { "clang", "c.yaml" },
-        { "cc", "c.yaml" }
+        { "cc", "c.yaml" },
+        { "rustc", "rust.yaml" }
     };
 
     /// <summary>
@@ -103,13 +104,13 @@ public class StovetopConfigTemplater
                     Executable = null,
                     Test = null,
                     Clean = null,
-                    Deploy = null
+                    Deploy = null,
                 },
                 Variables = new Dictionary<string, string>(),
                 Aliases = new Dictionary<string, string>(),
                 Hooks = null,
-                Profiles = null
-            }
+                Profiles = null,
+            },
         };
     }
 }

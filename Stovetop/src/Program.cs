@@ -16,6 +16,7 @@ public class Program
             || args.Contains("h");
 
         StovetopCore.Initialize(ignoreConfig);
+
         CommandParser.ParseCommands(args, ignoreConfig);
     }
 }

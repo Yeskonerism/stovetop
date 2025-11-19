@@ -1,13 +1,10 @@
 using Stovetop.stovetop;
 using Stovetop.stovetop.config;
-using Stovetop.stovetop.handlers;
 
 namespace Stovetop.Commands.Config;
 
 public class ConfigCommand
 {
-    private static bool _hasChanges;
-
     public static void Run()
     {
         if (!StovetopCore.VerifyConfig(true))

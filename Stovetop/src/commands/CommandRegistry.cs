@@ -64,6 +64,14 @@ public class CommandRegistry
             ConfigCommand.Run,
             ["cfg"]
         );
+        RegisterCommand(
+            "script",
+            "Execute a Wasabi script",
+            "stove script <path-to-script.wasabi>",
+            "user",
+            ScriptCommand.Run,
+            ["sc"]
+        );
     }
 
     public static void RegisterCommand(

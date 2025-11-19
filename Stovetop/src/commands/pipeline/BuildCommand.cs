@@ -27,7 +27,8 @@ public class BuildCommand
         foreach (var arg in arguments)
             buildProcess.ArgumentList.Add(arg);
 
-        StovetopHookHandler.ExecuteHook(HookType.PreBuild);
+        if (!StovetopCore.RunHookless)
+            StovetopHookHandler.ExecuteHook(HookType.PreBuild);
 
         StovetopCore.StovetopLogger?.Info("Starting build process...");
 
@@ -44,7 +45,8 @@ public class BuildCommand
                 $"Stove failed to build your project. Exited with code: {process.ExitCode}"
             );
 
-        StovetopHookHandler.ExecuteHook(HookType.PostBuild);
+        if (!StovetopCore.RunHookless)
+            StovetopHookHandler.ExecuteHook(HookType.PostBuild);
 
         if (process.ExitCode == 0)
         {
