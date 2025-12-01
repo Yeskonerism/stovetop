@@ -17,7 +17,8 @@ public class StovetopConfigTemplater
         { "g++", "c.yaml" },
         { "clang", "c.yaml" },
         { "cc", "c.yaml" },
-        { "rustc", "rust.yaml" }
+        { "rustc", "rust.yaml" },
+        { "empty", "empty.yaml" },
     };
 
     /// <summary>
@@ -73,6 +74,11 @@ public class StovetopConfigTemplater
                 );
                 return CreateDefaultTemplate(runtime);
             }
+
+            // Override the runtime type with the user's actual choice
+            // This ensures that if they chose "clang" but loaded "c.yaml",
+            // the config will have "clang" not "gcc"
+            config.Stovetop.Runtime.Type = normalizedRuntime;
 
             return config;
         }

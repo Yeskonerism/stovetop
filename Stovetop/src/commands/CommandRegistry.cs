@@ -172,4 +172,39 @@ public class CommandRegistry
 
         return defaultValue;
     }
+
+    public static int GetFlagPosition(string flag)
+    {
+        int position = 0;
+
+        if (CurrentArgs != null)
+        {
+            foreach (var f in CurrentArgs)
+            {
+                if (f == flag)
+                {
+                    return position;
+                }
+
+                position++;
+            }
+        }
+
+        return -1;
+    }
+    
+    public static string? GetFlagValue(string flag)
+    {
+        int flagPosition = GetFlagPosition(flag);
+
+        if (flagPosition != -1)
+        {
+            if (CurrentArgs != null && CurrentArgs.Length > GetFlagPosition(flag) + 1)
+            {
+                return CurrentArgs[flagPosition + 1];
+            }
+        }
+        
+        return null;
+    }
 }

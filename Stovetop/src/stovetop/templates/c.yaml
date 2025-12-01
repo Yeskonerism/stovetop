@@ -1,17 +1,21 @@
 project: c-template
 version: 0.0.1
+
 stovetop:
-  variables: {}
+  variables:
+    SRC: src
+    OUT: bin
+    CFLAGS: -Wall -Wextra -O2
   runtime:
-    type: gcc
+    type: gcc  # Will be overridden by user's choice (gcc/g++/clang/cc)
     version:
   commands:
-    build: src/main.c -o bin/app
+    build: ${CFLAGS} ${SRC}/main.c -o ${OUT}/app
     run:
-    executable: bin/app
+    executable: ${OUT}/app
     test:
-    clean:
+    clean: rm -rf ${OUT}
     deploy:
   aliases: {}
   hooks:
-  profiles: 
+  profiles:

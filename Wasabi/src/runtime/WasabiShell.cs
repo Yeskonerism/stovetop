@@ -12,7 +12,7 @@ public static class WasabiShell
     /// </summary>
     /// <param name="command">The command to execute</param>
     /// <returns>True if the command executed successfully, false otherwise</returns>
-    public static bool Execute(string command)
+    public static bool Execute(string command, bool silent = false)
     {
         try
         {
@@ -23,7 +23,7 @@ public static class WasabiShell
                     FileName = "bash",
                     Arguments = $"-c \"{command}\"",
                     UseShellExecute = false,
-                    RedirectStandardOutput = false,
+                    RedirectStandardOutput = silent,
                     RedirectStandardError = false
                 }
             };

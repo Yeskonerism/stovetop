@@ -18,7 +18,8 @@ public class ShellCommand : IWasabiCommand
     
     public void Execute(string line, WasabiContext context)
     {
-        var command = StringUtils.ExtractQuotedString(line);
+        //var command = StringUtils.ExtractQuotedString(line);
+        var command = line.Replace("shell ", "");
         
         if (string.IsNullOrEmpty(command))
         {
@@ -26,7 +27,7 @@ public class ShellCommand : IWasabiCommand
             return;
         }
         
-        WasabiShell.Execute(command);
+        WasabiShell.Execute(command, context._variables.ContainsKey("silent") && context._variables["silent"] == "true");
     }
 }
 

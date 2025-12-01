@@ -1,4 +1,5 @@
 using Stovetop.stovetop;
+using Stovetop.stovetop.handlers;
 
 namespace Stovetop.Commands.Config;
 
@@ -19,7 +20,7 @@ public class BackupCommand
             case "clean":
                 CleanBackups();
                 break;
-            default:  
+            default:
                 CreateBackup();
                 break;
         }
@@ -54,7 +55,7 @@ public class BackupCommand
     {
         if (StovetopCore.StovetopBackupRoot != null)
             return Directory
-                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.json")
+                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.yaml")
                 .OrderByDescending(f => Path.GetFileName(f))
                 .ToArray();
 
@@ -86,7 +87,7 @@ public class BackupCommand
         foreach (var backup in BackupList()!)
         {
             string fileName = Path.GetFileName(backup);
-            string backupId = fileName.Replace("-stovetop-backup.json", "");
+            string backupId = fileName.Replace("-stovetop-backup.yaml", "");
 
             if (showInfo)
             {
@@ -113,7 +114,7 @@ public class BackupCommand
 
     private static string ParseBackupDate(string backupId)
     {
-        string date = backupId.Replace("-stovetop-backup.json", "");
+        string date = backupId.Replace("-stovetop-backup.yaml", "");
 
         string[] dateParts = date.Split("-");
         string[] timeParts = dateParts[3].Split(":");
@@ -130,7 +131,7 @@ public class BackupCommand
         {
             string backupPath = Path.Combine(
                 StovetopCore.StovetopBackupRoot,
-                $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}-stovetop-backup.json"
+                $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}-stovetop-backup.yaml"
             );
 
             if (File.Exists(StovetopCore.StovetopConfigPath))
@@ -146,7 +147,7 @@ public class BackupCommand
         if (StovetopCore.StovetopConfigRoot != null)
         {
             string backupPath = Path.Combine(StovetopCore.StovetopConfigRoot, "cache/backups");
-            string backupFile = Path.Combine(backupPath, $"{backupId}-stovetop-backup.json");
+            string backupFile = Path.Combine(backupPath, $"{backupId}-stovetop-backup.yaml");
 
             if (!File.Exists(backupFile))
             {
@@ -185,7 +186,7 @@ public class BackupCommand
                 return null;
 
             var backups = Directory
-                .GetFiles(backupPath, "*-stovetop-backup.json")
+                .GetFiles(backupPath, "*-stovetop-backup.yaml")
                 .OrderByDescending(f => File.GetCreationTime(f))
                 .ToArray();
 
@@ -193,7 +194,7 @@ public class BackupCommand
                 return null;
 
             string fileName = Path.GetFileName(backups[0]);
-            return fileName.Replace("-stovetop-backup.json", "");
+            return fileName.Replace("-stovetop-backup.yaml", "");
         }
 
         return null;
@@ -202,7 +203,7 @@ public class BackupCommand
     public static bool HasBackups()
     {
         return Directory.Exists(StovetopCore.StovetopBackupRoot)
-            && Directory.GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.json").Length
+            && Directory.GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.yaml").Length
                 > 0;
     }
 
@@ -210,13 +211,52 @@ public class BackupCommand
     {
         return StovetopCore.StovetopBackupRoot != null
             && File.Exists(
-                Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.json")
+                Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.yaml")
             );
     }
 
     // TODO | Clean backups method, with numbered limit, max/min date etc.
     public static void CleanBackups()
     {
-        Console.WriteLine("Cleaning backups");
+        string? flag = CommandRegistry.GetPositionalArgument("backup", 2);
+        int amount = 0;
+
+        if (!HasBackups())
+        {
+            StovetopCore.StovetopLogger?.Info("No backups to clean");
+            return;
+        }
+
+        if (flag != null)
+        {
+            if (flag == "--all" || flag == "-a")
+            {
+                amount = int.MaxValue;
+            }
+
+            if (flag == "--amount" || flag == "--count")
+            {
+                amount = int.Parse(CommandRegistry.GetPositionalArgument("backup", 3) ?? "0");
+            }
+        }
+
+        StovetopCore.StovetopLogger?.Info("Cleaning backups...");
+
+        if (StovetopCore.StovetopBackupRoot != null)
+        {
+            string[] backups = Directory
+                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.yaml")
+                .OrderBy(f => File.GetCreationTime(f))
+                .ToArray();
+
+            int count = 0;
+            foreach (var backup in backups)
+            {
+                File.Delete(backup);
+                count++;
+                if (count >= amount)
+                    break;
+            }
+        }
     }
 }

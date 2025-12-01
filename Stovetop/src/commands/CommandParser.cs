@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Stovetop.Commands.Config;
 using Stovetop.stovetop;
+using Stovetop.stovetop.handlers;
 
 namespace Stovetop.Commands;
 
@@ -103,10 +104,14 @@ public class CommandParser
 
     private static void ExecuteShellCommand(string command)
     {
+        string commandVariableSupport = StovetopVariableHandler.SubstituteVariables(
+            command
+        );
+        
         var process = new ProcessStartInfo
         {
             FileName = "/bin/bash",
-            Arguments = $"-c \"{command}\"",
+            Arguments = $"-c \"{commandVariableSupport}\"",
             UseShellExecute = false,
         };
 
