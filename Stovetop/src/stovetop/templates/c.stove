@@ -1,0 +1,16 @@
+// Stovetop configuration for C/C++ projects
+project("c-template")
+version(0.0.1)
+
+runtime(gcc)
+
+// Variables
+var SRC = src
+var OUT = bin
+var CFLAGS = -Wall -Wextra -O2
+
+// Commands
+build_command("${CFLAGS} ${SRC}/main.c -o ${OUT}/app")
+executable("${OUT}/app")
+
+alias(clean, "rm -rf ${OUT}")

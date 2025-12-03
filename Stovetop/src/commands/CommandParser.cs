@@ -32,7 +32,10 @@ public class CommandParser
             )
             {
                 if (SupportsBackupFlag(command.Name))
-                    ExecuteWithOptionalBackup(command, GetBackupFlagIndex() != -1 ? GetBackupFlagIndex() : 1);
+                    ExecuteWithOptionalBackup(
+                        command,
+                        GetBackupFlagIndex() != -1 ? GetBackupFlagIndex() : 1
+                    );
                 else
                     command.Command.Invoke();
                 return;
@@ -41,10 +44,10 @@ public class CommandParser
 
         if (
             StovetopCore.StovetopConfig != null
-            && StovetopCore.StovetopConfig.Stovetop.Aliases.ContainsKey(commandName)
+            && StovetopCore.StovetopConfig.Aliases.ContainsKey(commandName)
         )
         {
-            string resolvedCommand = StovetopCore.StovetopConfig.Stovetop.Aliases[commandName];
+            string resolvedCommand = StovetopCore.StovetopConfig.Aliases[commandName];
             StovetopCore.StovetopLogger?.Info(
                 $"Alias '{commandName}' resolved to '{resolvedCommand}'"
             );
@@ -104,10 +107,8 @@ public class CommandParser
 
     private static void ExecuteShellCommand(string command)
     {
-        string commandVariableSupport = StovetopVariableHandler.SubstituteVariables(
-            command
-        );
-        
+        string commandVariableSupport = StovetopVariableHandler.SubstituteVariables(command);
+
         var process = new ProcessStartInfo
         {
             FileName = "/bin/bash",
@@ -128,7 +129,7 @@ public class CommandParser
         // Check if backup flag is set (--backup)
         if (
             CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex)
-                == "--backup"
+            == "--backup"
         )
         {
             string? positionalArgument = CommandRegistry.GetPositionalArgument(
@@ -178,7 +179,7 @@ public class CommandParser
                 StovetopCore.StovetopConfigPath = pathToBackupConfig;
                 StovetopCore.StovetopLogger?.Info($"Using backup config: {backupId}");
                 StovetopCore.LoadConfig();
-                StovetopCore.StovetopRuntime = StovetopCore.StovetopConfig?.Stovetop.Runtime.Type;
+                StovetopCore.StovetopRuntime = StovetopCore.StovetopConfig?.Runtime;
 
                 // Execute the command
                 command.Command.Invoke();

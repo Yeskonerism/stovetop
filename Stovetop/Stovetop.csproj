@@ -12,15 +12,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="YamlDotnet" Version="16.3.0" />
+      <EmbeddedResource Include="src\stovetop\templates\*.stove" />
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="src\stovetop\templates\*.yaml" />
+      <ProjectReference Include="..\Stovetop.ConfigParser\Stovetop.ConfigParser.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Wasabi\Wasabi.csproj" />
+      <None Remove="src\stovetop\templates\python.yaml" />
+      <None Remove="src\stovetop\templates\rust.yaml" />
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,10 @@
+// Stovetop configuration for .NET projects
+project("dotnet-template")
+version(0.0.1)
+
+runtime(dotnet)
+
+// Commands
+build_command(build)
+run_command(run --)
+

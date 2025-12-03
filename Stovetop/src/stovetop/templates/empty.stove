@@ -1,0 +1,10 @@
+// Stovetop configuration
+project("")
+version(0.0.1)
+
+runtime()
+
+// Commands
+build_command()
+run_command()
+

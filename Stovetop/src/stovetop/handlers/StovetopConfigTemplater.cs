@@ -1,41 +1,40 @@
 using System.Reflection;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using Stovetop.ConfigParser;
 
-namespace Stovetop.stovetop.config;
+namespace Stovetop.stovetop.handlers;
 
 public class StovetopConfigTemplater
 {
     // Map of runtime names to template file names
     private static readonly Dictionary<string, string> RuntimeTemplateMap = new()
     {
-        { "dotnet", "dotnet.yaml" },
-        { "python", "python.yaml" },
-        { "npm", "npm.yaml" },
-        { "node", "npm.yaml" },
-        { "gcc", "c.yaml" },
-        { "g++", "c.yaml" },
-        { "clang", "c.yaml" },
-        { "cc", "c.yaml" },
-        { "rustc", "rust.yaml" },
-        { "empty", "empty.yaml" },
+        { "dotnet", "dotnet.stove" },
+        { "python", "python.stove" },
+        { "npm", "npm.stove" },
+        { "node", "npm.stove" },
+        { "gcc", "c.stove" },
+        { "g++", "c.stove" },
+        { "clang", "c.stove" },
+        { "cc", "c.stove" },
+        { "rustc", "rust.stove" },
+        { "empty", "empty.stove" },
     };
 
     /// <summary>
     /// Loads a template configuration from embedded resources based on runtime name.
-    /// Returns a StovetopConfig with pre-filled values from the template.
+    /// Returns a ConfigModel with pre-filled values from the template.
     /// </summary>
     /// <param name="runtime">The runtime name (e.g., "dotnet", "python", "gcc")</param>
-    /// <returns>A StovetopConfig loaded from the template, or a default config if template not found</returns>
-    public static StovetopConfig LoadTemplate(string runtime)
+    /// <returns>A ConfigModel loaded from the template, or a default config if template not found</returns>
+    public static ConfigModel LoadTemplate(string runtime)
     {
         // Normalize runtime name to lowercase
         string normalizedRuntime = runtime.ToLower();
 
         // Get template file name from map, or try using runtime name directly
-        string templateFileName = RuntimeTemplateMap.ContainsKey(normalizedRuntime)
-            ? RuntimeTemplateMap[normalizedRuntime]
-            : $"{normalizedRuntime}.yaml";
+        string templateFileName = RuntimeTemplateMap.TryGetValue(normalizedRuntime, out var mapped)
+            ? mapped
+            : $"{normalizedRuntime}.stove";
 
         try
         {
@@ -56,16 +55,12 @@ public class StovetopConfigTemplater
                 return CreateDefaultTemplate(runtime);
             }
 
-            // Read the YAML content from the stream
+            // Read the .stove content from the stream
             using StreamReader reader = new StreamReader(stream);
-            string yaml = reader.ReadToEnd();
+            string stoveContent = reader.ReadToEnd();
 
-            // Deserialize the YAML into a StovetopConfig object
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            StovetopConfig? config = deserializer.Deserialize<StovetopConfig>(yaml);
+            // Parse the .stove content into a ConfigModel object
+            ConfigModel? config = StovetopConfigParser.Parse(stoveContent);
 
             if (config == null)
             {
@@ -76,9 +71,9 @@ public class StovetopConfigTemplater
             }
 
             // Override the runtime type with the user's actual choice
-            // This ensures that if they chose "clang" but loaded "c.yaml",
+            // This ensures that if they chose "clang" but loaded "c.stove",
             // the config will have "clang" not "gcc"
-            config.Stovetop.Runtime.Type = normalizedRuntime;
+            config.Runtime = normalizedRuntime;
 
             return config;
         }
@@ -94,29 +89,17 @@ public class StovetopConfigTemplater
     /// <summary>
     /// Creates a minimal default template when no template file is found.
     /// </summary>
-    private static StovetopConfig CreateDefaultTemplate(string runtime)
+    private static ConfigModel CreateDefaultTemplate(string runtime)
     {
-        return new StovetopConfig
+        return new ConfigModel
         {
             Project = "",
             Version = "0.0.1",
-            Stovetop = new StovetopSection
-            {
-                Runtime = new RuntimeConfig { Type = runtime, Version = "" },
-                Commands = new CommandsConfig
-                {
-                    Build = "",
-                    Run = "",
-                    Executable = null,
-                    Test = null,
-                    Clean = null,
-                    Deploy = null,
-                },
-                Variables = new Dictionary<string, string>(),
-                Aliases = new Dictionary<string, string>(),
-                Hooks = null,
-                Profiles = null,
-            },
+            Runtime = runtime,
+            RuntimeVersion = "",
+            Variables = new Dictionary<string, string>(),
+            Commands = new Dictionary<string, string> { { "build", "" }, { "run", "" } },
+            Aliases = new Dictionary<string, string>(),
         };
     }
 }

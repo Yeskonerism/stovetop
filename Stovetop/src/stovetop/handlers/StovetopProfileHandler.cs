@@ -1,4 +1,4 @@
-using Stovetop.stovetop.config;
+using Stovetop.ConfigParser;
 
 namespace Stovetop.stovetop.handlers;
 
@@ -17,12 +17,12 @@ public class StovetopProfileHandler
     }
 
     // this will be used to merge the base config with the profile config, only overriding the values that match both the base config and profile config
-    public static StovetopConfig MergeProfile(
-        StovetopConfig baseConfig,
-        StovetopConfig profileConfig
+    public static ConfigModel MergeProfile(
+        ConfigModel baseConfig,
+        ConfigModel profileConfig
     )
     {
-        StovetopConfig result = new StovetopConfig();
+        ConfigModel result = new ConfigModel();
 
         return result; // return the merged profile
     }

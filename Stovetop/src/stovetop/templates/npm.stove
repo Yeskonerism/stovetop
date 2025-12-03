@@ -1,0 +1,11 @@
+// Stovetop configuration for Node.js/npm projects
+project("npm-template")
+version(0.0.1)
+
+runtime(npm)
+
+// Commands
+build_command(run build)
+run_command(run dev)
+deploy_command(run deploy)
+

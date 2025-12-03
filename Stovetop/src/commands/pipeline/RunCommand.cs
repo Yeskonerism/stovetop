@@ -9,18 +9,20 @@ public class RunCommand
     public static void Run()
     {
         // verify runtime exists
-        if(!StovetopCore.VerifyRuntime()) return;
-        
+        if (!StovetopCore.VerifyRuntime())
+            return;
+
         // Determine what to run: prefer executable if set, otherwise use runtime + runCommand
         string? fileName;
         string[] arguments;
 
-        if (!string.IsNullOrEmpty(StovetopCore.StovetopConfig?.Stovetop.Commands.Executable))
+        string? executableCmd = null;
+        StovetopCore.StovetopConfig?.Commands.TryGetValue("executable", out executableCmd);
+
+        if (!string.IsNullOrEmpty(executableCmd))
         {
             // Running a compiled executable directly
-            string executable = StovetopVariableHandler.SubstituteVariables(
-                StovetopCore.StovetopConfig.Stovetop.Commands.Executable
-            );
+            string executable = StovetopVariableHandler.SubstituteVariables(executableCmd);
             StovetopCore.StovetopLogger?.Info($"Using executable: {executable}");
             fileName = executable;
             arguments = Array.Empty<string>(); // Executables typically don't need runtime args
@@ -29,22 +31,18 @@ public class RunCommand
         {
             // Running with a runtime (e.g., dotnet, python, node)
             fileName = StovetopCore.StovetopRuntime;
-            string runCommand = StovetopVariableHandler.SubstituteVariables(
-                StovetopCore.StovetopConfig?.Stovetop.Commands.Run ?? ""
-            );
+            string? runCmd = null;
+            StovetopCore.StovetopConfig?.Commands.TryGetValue("run", out runCmd);
+            string runCommand = StovetopVariableHandler.SubstituteVariables(runCmd ?? "");
             arguments = CommandParser.ParseArguments(runCommand);
         }
 
-        var runProcess = new ProcessStartInfo
-        {
-            FileName = fileName,
-            UseShellExecute = false,
-        };
+        var runProcess = new ProcessStartInfo { FileName = fileName, UseShellExecute = false };
 
         foreach (var arg in arguments)
             runProcess.ArgumentList.Add(arg);
 
-        if(!StovetopCore.RunHookless)
+        if (!StovetopCore.RunHookless)
             StovetopHookHandler.ExecuteHook(HookType.PreRun);
 
         // run primary stove process
@@ -66,7 +64,7 @@ public class RunCommand
             StovetopCore.StovetopLogger?.Success("Stove has served your project successfully.");
 
         // post-run hook
-        if(!StovetopCore.RunHookless)
+        if (!StovetopCore.RunHookless)
             StovetopHookHandler.ExecuteHook(HookType.PostRun);
     }
 }

@@ -1,0 +1,9 @@
+// Stovetop configuration for Python projects
+project("python-template")
+version(0.0.1)
+
+runtime(python)
+
+// Commands
+run_command(main.py)
+

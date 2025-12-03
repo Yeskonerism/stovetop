@@ -1,11 +1,8 @@
 using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text;
+using Stovetop.ConfigParser;
 using Stovetop.Commands;
-using Stovetop.stovetop.config;
 using Stovetop.stovetop.handlers;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 using static System.Environment;
 
 namespace Stovetop.stovetop;
@@ -16,7 +13,7 @@ public static class StovetopCore
     public static string? StovetopConfigRoot;
     public static string? StovetopConfigPath;
     public static bool StovetopConfigExists;
-    public static StovetopConfig? StovetopConfig;
+    public static ConfigModel? StovetopConfig;
     public static StovetopLogger? StovetopLogger;
     public static string? StovetopRuntime;
 
@@ -31,11 +28,11 @@ public static class StovetopCore
     {
         StovetopRoot = Directory.GetCurrentDirectory();
         StovetopConfigRoot = Path.Combine(StovetopRoot, ".stove");
-        StovetopConfigPath = Path.Combine(StovetopConfigRoot, "stovetop.config.yaml");
+        StovetopConfigPath = Path.Combine(StovetopConfigRoot, "stovetop.stove");
 
         StovetopBackupRoot = Path.Combine(StovetopConfigRoot, "cache/backups");
         StovetopScriptRoot = Path.Combine(StovetopConfigRoot, "scripts");
-        
+
         RunSilent = CommandRegistry.CurrentArgs != null && (
             CommandRegistry.CurrentArgs.Contains("-s")
             || CommandRegistry.CurrentArgs.Contains("--silent")
@@ -57,7 +54,7 @@ public static class StovetopCore
             if (VerifyConfig())
             {
                 LoadConfig();
-                StovetopRuntime = StovetopConfig?.Stovetop.Runtime.Type;
+                StovetopRuntime = StovetopConfig?.Runtime;
             }
             else
             {
@@ -82,27 +79,57 @@ public static class StovetopCore
     {
         if (StovetopConfigPath != null)
         {
-            string yaml = File.ReadAllText(StovetopConfigPath);
-
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            StovetopConfig = deserializer.Deserialize<StovetopConfig>(yaml);
+            StovetopConfig = StovetopConfigParser.ParseFile(StovetopConfigPath);
         }
     }
 
     public static void SaveConfig()
     {
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
+        if (StovetopConfig == null || StovetopConfigPath == null)
+            return;
 
-        string yaml = serializer.Serialize(StovetopConfig);
+        var sb = new StringBuilder();
 
-        if (StovetopConfigPath != null)
-            File.WriteAllText(StovetopConfigPath, yaml);
+        // Write project info
+        sb.AppendLine($"// Stovetop configuration file");
+        sb.AppendLine($"project(\"{StovetopConfig.Project}\")");
+        sb.AppendLine($"version({StovetopConfig.Version})");
+        sb.AppendLine();
 
+        // Write runtime
+        sb.AppendLine($"runtime({StovetopConfig.Runtime})");
+        sb.AppendLine();
+
+        // Write variables
+        if (StovetopConfig.Variables.Count > 0)
+        {
+            sb.AppendLine("// Variables");
+            foreach (var variable in StovetopConfig.Variables)
+            {
+                sb.AppendLine($"var {variable.Key} = {variable.Value}");
+            }
+            sb.AppendLine();
+        }
+
+        // Write commands
+        sb.AppendLine("// Commands");
+        foreach (var command in StovetopConfig.Commands)
+        {
+            sb.AppendLine($"{command.Key}_command({command.Value})");
+        }
+        sb.AppendLine();
+
+        // Write aliases
+        if (StovetopConfig.Aliases.Count > 0)
+        {
+            sb.AppendLine("// Aliases");
+            foreach (var alias in StovetopConfig.Aliases)
+            {
+                sb.AppendLine($"alias(\"{alias.Key}\", \"{alias.Value}\")");
+            }
+        }
+
+        File.WriteAllText(StovetopConfigPath, sb.ToString());
         StovetopLogger?.Success("Configuration saved successfully.");
     }
 
@@ -130,8 +157,6 @@ public static class StovetopCore
             )
                 Directory.CreateDirectory(Path.Combine(StovetopConfigRoot, subDirectory));
         }
-
-        StovetopHookHandler.CreateDefaultHookScripts();
     }
 
     public static bool VerifyRuntime()

@@ -1,0 +1,39 @@
+// Stovetop configuration file
+var PROJECT = "my-game"
+
+project("${PROJECT}")
+version(0.0.1)
+
+runtime("gcc")
+
+// Variables
+var SRC = "src"
+var OUT = "bin"
+var CFLAGS = "-Wall -Wextra -O2"
+var FILES = "src/main.c src/game.c"
+
+// Commands
+build_command("${CFLAGS} ${FILES} -I${SRC} -o ${OUT}/${PROJECT}")
+executable("${OUT}/${PROJECT}")
+
+// Hooks
+pre_build_hook("
+	echo 'Building ${PROJECT} to ${OUT}/${PROJECT}...';
+
+	if [ ! -d '${OUT}' ]; then 
+		echo 'Out directory does not exist... creating...';
+		mkdir -p ${OUT} && echo 'Directory ${OUT} created.';
+	fi
+")
+
+post_build_hook("
+	if [ -f '${OUT}/${PROJECT}' ]; then 
+		sh verify-build-success.sh '${OUT}/${PROJECT}'; 
+	else 
+		echo 'Stove did not output an executable to ${OUT}/${PROJECT}, you may have errors in your code.'; 
+	fi
+")
+
+// Aliases
+alias("clean", "rm -rf ${OUT}")
+alias("remake", "mkdir -p ${OUT}")

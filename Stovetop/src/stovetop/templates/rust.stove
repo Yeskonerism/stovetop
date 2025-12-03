@@ -1,0 +1,10 @@
+// Stovetop configuration for Rust projects
+project("rust-template")
+version(0.0.1)
+
+runtime(rustc)
+
+// Commands
+build_command(src/main.rs -o bin/app)
+executable(bin/app)
+

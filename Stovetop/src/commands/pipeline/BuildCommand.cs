@@ -12,9 +12,9 @@ public class BuildCommand
         if (!StovetopCore.VerifyRuntime())
             return;
 
-        string buildCommand = StovetopVariableHandler.SubstituteVariables(
-            StovetopCore.StovetopConfig?.Stovetop.Commands.Build ?? ""
-        );
+        string? buildCmd = null;
+        StovetopCore.StovetopConfig?.Commands.TryGetValue("build", out buildCmd);
+        string buildCommand = StovetopVariableHandler.SubstituteVariables(buildCmd ?? "");
 
         string[] arguments = CommandParser.ParseArguments(buildCommand);
 

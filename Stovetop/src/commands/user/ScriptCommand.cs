@@ -1,6 +1,7 @@
+using System.Diagnostics;
 using Stovetop.Commands;
 using Stovetop.stovetop;
-using Wasabi;
+using Stovetop.stovetop.handlers;
 
 namespace Stovetop.commands.user;
 
@@ -11,71 +12,43 @@ public class ScriptCommand
 {
     public static void Run()
     {
-        string? scriptPath = CommandRegistry.GetPositionalArgument("script", 1);
+        string? scriptName = CommandRegistry.GetPositionalArgument("script", 1);
 
-        if (string.IsNullOrEmpty(scriptPath))
+        if (string.IsNullOrEmpty(scriptName))
         {
-            StovetopCore.StovetopLogger?.Error("No script file specified");
-            StovetopCore.StovetopLogger?.Info("Usage: stove script <path-to-script.wasabi>");
+            StovetopCore.StovetopLogger?.Error("No script name specified");
             return;
         }
 
-        ExecuteScript(scriptPath);
+        // Check if it's a config-defined script first
+        if (StovetopCore.StovetopConfig?.Scripts.TryGetValue(scriptName, out string? scriptContent) == true)
+        {
+            ExecuteInlineScript(scriptContent);
+        }
+        else
+        {
+            StovetopCore.StovetopLogger?.Error("Script not found");
+        }
+    }
+    
+    private static void ExecuteShellScript(string command)
+    {
+        var process = new ProcessStartInfo
+        {
+            FileName = Environment.OSVersion.Platform == PlatformID.Win32NT ? "cmd" : "bash",
+            Arguments = Environment.OSVersion.Platform == PlatformID.Win32NT ? $"/c \"{command}\"" : $"-c \"{command}\"",
+            UseShellExecute = false,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false
+        };
+
+        var proc = Process.Start(process);
+        proc?.WaitForExit();
     }
 
-    /// <summary>
-    /// Executes a Wasabi script with Stovetop context (variables, project info, etc.)
-    /// </summary>
-    /// <param name="scriptPath">Path to the .wasabi script file</param>
-    public static void ExecuteScript(string scriptPath)
+    private static void ExecuteInlineScript(string scriptContent)
     {
-        if (!File.Exists(scriptPath))
-        {
-            StovetopCore.StovetopLogger?.Error($"Script not found: {scriptPath}");
-            return;
-        }
-
-        try
-        {
-            // Build variable dictionary from Stovetop config
-            var variables = new Dictionary<string, string>();
-
-            // Add user-defined variables from config
-            if (StovetopCore.StovetopConfig?.Stovetop.Variables != null)
-            {
-                foreach (var (key, value) in StovetopCore.StovetopConfig.Stovetop.Variables)
-                {
-                    variables[key] = value;
-                }
-            }
-
-            // Add built-in Stovetop variables
-            variables["PROJECT"] = StovetopCore.StovetopConfig?.Project ?? "";
-            variables["VERSION"] = StovetopCore.StovetopConfig?.Version ?? "";
-            variables["RUNTIME"] = StovetopCore.StovetopConfig?.Stovetop.Runtime.Type ?? "";
-            variables["RUNTIME_VERSION"] = StovetopCore.StovetopConfig?.Stovetop.Runtime.Version ?? "";
-
-            // Add current working directory
-            variables["CWD"] = Directory.GetCurrentDirectory();
-            variables["SCRIPT_DIR"] = Path.GetDirectoryName(Path.GetFullPath(scriptPath)) ?? "";
-
-            if (StovetopCore.RunVerbose)
-            {
-                StovetopCore.StovetopLogger?.Debug($"Executing Wasabi script: {scriptPath}");
-                StovetopCore.StovetopLogger?.Debug($"Available variables: {string.Join(", ", variables.Keys)}");
-            }
-
-            // Execute the Wasabi script
-            WasabiInterpreter.Execute(scriptPath, variables);
-
-            if (StovetopCore.RunVerbose)
-                StovetopCore.StovetopLogger?.Success("Script execution complete");
-        }
-        catch (Exception ex)
-        {
-            StovetopCore.StovetopLogger?.Error($"Script execution failed: {ex.Message}");
-            if (StovetopCore.RunVerbose)
-                StovetopCore.StovetopLogger?.Debug($"Stack trace: {ex.StackTrace}");
-        }
+        string templatedScript = StovetopVariableHandler.SubstituteVariables(scriptContent);
+        ExecuteShellScript(templatedScript);
     }
 }

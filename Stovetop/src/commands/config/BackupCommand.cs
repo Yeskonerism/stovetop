@@ -55,7 +55,7 @@ public class BackupCommand
     {
         if (StovetopCore.StovetopBackupRoot != null)
             return Directory
-                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.yaml")
+                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove")
                 .OrderByDescending(f => Path.GetFileName(f))
                 .ToArray();
 
@@ -87,7 +87,7 @@ public class BackupCommand
         foreach (var backup in BackupList()!)
         {
             string fileName = Path.GetFileName(backup);
-            string backupId = fileName.Replace("-stovetop-backup.yaml", "");
+            string backupId = fileName.Replace("-stovetop-backup.stove", "");
 
             if (showInfo)
             {
@@ -114,7 +114,7 @@ public class BackupCommand
 
     private static string ParseBackupDate(string backupId)
     {
-        string date = backupId.Replace("-stovetop-backup.yaml", "");
+        string date = backupId.Replace("-stovetop-backup.stove", "");
 
         string[] dateParts = date.Split("-");
         string[] timeParts = dateParts[3].Split(":");
@@ -131,7 +131,7 @@ public class BackupCommand
         {
             string backupPath = Path.Combine(
                 StovetopCore.StovetopBackupRoot,
-                $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}-stovetop-backup.yaml"
+                $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}-stovetop-backup.stove"
             );
 
             if (File.Exists(StovetopCore.StovetopConfigPath))
@@ -147,7 +147,7 @@ public class BackupCommand
         if (StovetopCore.StovetopConfigRoot != null)
         {
             string backupPath = Path.Combine(StovetopCore.StovetopConfigRoot, "cache/backups");
-            string backupFile = Path.Combine(backupPath, $"{backupId}-stovetop-backup.yaml");
+            string backupFile = Path.Combine(backupPath, $"{backupId}-stovetop-backup.stove");
 
             if (!File.Exists(backupFile))
             {
@@ -186,7 +186,7 @@ public class BackupCommand
                 return null;
 
             var backups = Directory
-                .GetFiles(backupPath, "*-stovetop-backup.yaml")
+                .GetFiles(backupPath, "*-stovetop-backup.stove")
                 .OrderByDescending(f => File.GetCreationTime(f))
                 .ToArray();
 
@@ -194,7 +194,7 @@ public class BackupCommand
                 return null;
 
             string fileName = Path.GetFileName(backups[0]);
-            return fileName.Replace("-stovetop-backup.yaml", "");
+            return fileName.Replace("-stovetop-backup.stove", "");
         }
 
         return null;
@@ -203,7 +203,7 @@ public class BackupCommand
     public static bool HasBackups()
     {
         return Directory.Exists(StovetopCore.StovetopBackupRoot)
-            && Directory.GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.yaml").Length
+            && Directory.GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove").Length
                 > 0;
     }
 
@@ -211,7 +211,7 @@ public class BackupCommand
     {
         return StovetopCore.StovetopBackupRoot != null
             && File.Exists(
-                Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.yaml")
+                Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.stove")
             );
     }
 
@@ -245,7 +245,7 @@ public class BackupCommand
         if (StovetopCore.StovetopBackupRoot != null)
         {
             string[] backups = Directory
-                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.yaml")
+                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove")
                 .OrderBy(f => File.GetCreationTime(f))
                 .ToArray();
 

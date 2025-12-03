@@ -1,5 +1,5 @@
+using Stovetop.ConfigParser;
 using Stovetop.stovetop;
-using Stovetop.stovetop.config;
 
 namespace Stovetop.Commands.Config;
 
@@ -28,29 +28,29 @@ public class ConfigCommand
         }
     }
 
-    private static void ViewConfig(StovetopConfig config)
+    private static void ViewConfig(ConfigModel config)
     {
         var flags = new Dictionary<string[], Action>
         {
             { ["--name", "-n"], () => PrintValue(("Name", config.Project)) },
             { ["--version", "-v"], () => PrintValue(("Version", config.Version)) },
-            { ["--runtime", "-rt"], () => PrintValue(("Runtime", config.Stovetop.Runtime.Type)) },
+            { ["--runtime", "-rt"], () => PrintValue(("Runtime", config.Runtime)) },
             {
                 ["--run", "-r", "-rc", "--run-command"],
-                () => PrintValue(("Run Command", config.Stovetop.Commands.Run))
+                () => PrintValue(("Run Command", config.Commands.GetValueOrDefault("run", "")))
             },
             {
                 ["--executable", "-e", "-exec"],
-                () => PrintValue(("Executable", config.Stovetop.Commands.Executable ?? ""))
+                () => PrintValue(("Executable", config.Commands.GetValueOrDefault("executable", "")))
             },
             {
                 ["--build", "-b", "-bc", "--build-command"],
-                () => PrintValue(("Build Command", config.Stovetop.Commands.Build))
+                () => PrintValue(("Build Command", config.Commands.GetValueOrDefault("build", "")))
             },
-            { ["--aliases", "-a"], () => PrintAliases(config.Stovetop.Aliases) },
-            { ["--variables", "--vars"], () => PrintVariables(config.Stovetop.Variables) },
+            { ["--aliases", "-a"], () => PrintAliases(config.Aliases) },
+            { ["--variables", "--vars"], () => PrintVariables(config.Variables) },
         };
-        
+
         bool foundFlags = false;
 
         // search for flags
@@ -74,7 +74,7 @@ public class ConfigCommand
             PrintAll(config);
     }
 
-    private static void PrintAll(StovetopConfig config)
+    private static void PrintAll(ConfigModel config)
     {
         // print title
         Console.WriteLine("Stovetop Configuration\n");
@@ -88,55 +88,45 @@ public class ConfigCommand
         // print runtime information
         var runtimeInfo = new List<(string key, string value)>
         {
-            ("Type", config.Stovetop.Runtime.Type),
+            ("Type", config.Runtime),
         };
 
-        if (!string.IsNullOrEmpty(config.Stovetop.Runtime.Version))
+        if (!string.IsNullOrEmpty(config.RuntimeVersion))
         {
-            runtimeInfo.Add(("Version", config.Stovetop.Runtime.Version));
+            runtimeInfo.Add(("Version", config.RuntimeVersion));
         }
 
         PrintSection("Runtime", runtimeInfo.ToArray());
 
         // print commands
-        var commandsInfo = new List<(string key, string value)>
-        {
-            ("Build", config.Stovetop.Commands.Build),
-            ("Run", config.Stovetop.Commands.Run),
-        };
+        var commandsInfo = new List<(string key, string value)>();
 
-        if (!string.IsNullOrEmpty(config.Stovetop.Commands.Executable))
-        {
-            commandsInfo.Add(("Executable", config.Stovetop.Commands.Executable));
-        }
+        if (config.Commands.TryGetValue("build", out var buildCmd))
+            commandsInfo.Add(("Build", buildCmd));
+        if (config.Commands.TryGetValue("run", out var runCmd))
+            commandsInfo.Add(("Run", runCmd));
+        if (config.Commands.TryGetValue("executable", out var execCmd))
+            commandsInfo.Add(("Executable", execCmd));
+        if (config.Commands.TryGetValue("test", out var testCmd))
+            commandsInfo.Add(("Test", testCmd));
+        if (config.Commands.TryGetValue("clean", out var cleanCmd))
+            commandsInfo.Add(("Clean", cleanCmd));
+        if (config.Commands.TryGetValue("deploy", out var deployCmd))
+            commandsInfo.Add(("Deploy", deployCmd));
 
-        if (!string.IsNullOrEmpty(config.Stovetop.Commands.Test))
-        {
-            commandsInfo.Add(("Test", config.Stovetop.Commands.Test));
-        }
-
-        if (!string.IsNullOrEmpty(config.Stovetop.Commands.Clean))
-        {
-            commandsInfo.Add(("Clean", config.Stovetop.Commands.Clean));
-        }
-
-        if (!string.IsNullOrEmpty(config.Stovetop.Commands.Deploy))
-        {
-            commandsInfo.Add(("Deploy", config.Stovetop.Commands.Deploy));
-        }
-
-        PrintSection("Commands", commandsInfo.ToArray());
+        if (commandsInfo.Count > 0)
+            PrintSection("Commands", commandsInfo.ToArray());
 
         // print variables
-        if (config.Stovetop.Variables.Count > 0)
+        if (config.Variables.Count > 0)
         {
-            PrintVariables(config.Stovetop.Variables);
+            PrintVariables(config.Variables);
         }
 
         // print aliases
-        if (config.Stovetop.Aliases.Count > 0)
+        if (config.Aliases.Count > 0)
         {
-            PrintAliases(config.Stovetop.Aliases);
+            PrintAliases(config.Aliases);
         }
     }
 
