@@ -151,8 +151,7 @@ public static class StovetopCore
                     "profiles",
                     "cache",
                     "cache/backups",
-                    "scripts/user",
-                    "scripts/hooks",
+                    "scripts"
                 }
             )
                 Directory.CreateDirectory(Path.Combine(StovetopConfigRoot, subDirectory));
