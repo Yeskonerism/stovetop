@@ -1,21 +1,50 @@
 # 🔥 Stovetop
 
-**A modern, cross-platform build automation tool with integrated scripting support.**
+**A modern, cross-platform build automation tool**
 
-Stovetop is a flexible build system that simplifies project configuration and automation across multiple languages and runtimes. Think Make, but with YAML configs and a built-in scripting language.
+Stovetop is a flexible build system that simplifies project configuration and automation across multiple languages and runtimes. Think Make, but with its own readable and concise config format. Cooking, aren't we?
+
+---
+
+# Table of contents
+
+1. [Features](#features)
+2. [Quick Start](#quick-start)
+   - [Installation](#installation)
+   - [Initialize a Project](#initialize-a-project)
+   - [Basic Usage](#basic-usage)
+3. [Commands](#commands)
+4. [Configuration](#configuration)
+   - [Example Configuration](#example-configuration)
+   - [Supported Runtimes](#supported-runtimes)
+5. [Hooks](#hooks)
+   - [Hook Types](#hook-types)
+   - [Hook Declaration](#hook-declaration)
+   - [Example Hook](#example-hook)
+6. [Backup Management](#backup-management)
+   - [Backup Commands](#backup-commands)
+7. [Advanced Usage](#advanced-usage)
+   - [Using Variables](#using-variables)
+   - [Custom Aliases](#custom-aliases)
+8. [Project Structure](#project-structure)
+9. [Development](#development)
+   - [Building from Source](#building-from-source)
+   - [Adding New Commands](#adding-new-commands)
+10. [Contributing](#contributing)
+11. [Links](#links)
+12. [License](#license)
 
 ---
 
 ## ✨ Features
 
 - 🎯 **Universal Build Tool** - Works with .NET, Python, Node.js, C/C++, Rust, and more
-- 📝 **YAML Configuration** - Simple, readable project configs
+- 📝 **Custom Configuration** - Simple, readable project configs
 - 🔧 **Template System** - Quick project initialization with runtime-specific templates
 - 🪝 **Hook System** - Run scripts before/after build and run operations
 - 🎨 **Custom Aliases** - Create shortcuts for frequently used commands
 - 📦 **Variable Substitution** - Use `${VAR}` syntax in commands
 - 💾 **Config Backups** - Automatic backup and restore functionality
-- 🌊 **Wasabi Scripting** - Built-in scripting language for automation
 
 ---
 
@@ -78,7 +107,7 @@ stove help
 
 | Command | Aliases | Description |
 |---------|---------|-------------|
-| `config` | `cfg` | View and edit configuration |
+| `config` | `cfg` | View configuration |
 | `backup` | `bak`, `bkp` | Manage config backups |
 
 ### User Commands
@@ -86,51 +115,37 @@ stove help
 | Command | Aliases | Description |
 |---------|---------|-------------|
 | `help` | `h` | Show help information |
-| `script` | `sc` | Execute a Wasabi script |
+| `script` | `sc` | Execute a named inline script |
 
 ---
 
 ## ⚙️ Configuration
 
-Stovetop uses a YAML configuration file located at `.stove/stovetop.config.yaml`.
+Stovetop uses it's own built in format for its configuration file, which is located at `.stove/stovetop.stove`.
 
 ### Example Configuration
 
-```yaml
-project: MyProject
-version: 1.0.0
+```js
+// Stovetop configuration file
+var PROJECT = "my-game"
 
-stovetop:
-  # Variables (use ${VAR} in commands)
-  variables:
-    SRC: src
-    OUT: bin
-    CFLAGS: -Wall -Wextra -O2
+project("${PROJECT}")
+version(0.0.1)
 
-  # Runtime configuration
-  runtime:
-    type: dotnet
-    version: net9.0
+runtime("gcc")
 
-  # Commands
-  commands:
-    build: build
-    run: run --
-    executable: ${OUT}/app
-    test: test
-    clean: clean
-    deploy: publish -c Release
+// Variables
+var SRC = "src"
+var OUT = "bin"
+var CFLAGS = "-Wall -Wextra -O2"
+var FILES = "src/main.c src/game.c"
 
-  # Custom aliases
-  aliases:
-    t: dotnet test
-    watch: dotnet watch run
+// Commands
+build_command("${CFLAGS} ${FILES} -I${SRC} -o ${OUT}/${PROJECT}")
+executable("${OUT}/${PROJECT}")
 
-  # Hooks (optional)
-  hooks: null
-
-  # Profiles (optional)
-  profiles: null
+// Aliases
+alias("clean", "rm -rf ${OUT}")
 ```
 
 ### Supported Runtimes
@@ -145,88 +160,38 @@ stovetop:
 
 ## 🪝 Hooks
 
-Hooks are Wasabi scripts that run at specific points in the build/run lifecycle.
+Hooks are inline shell scripts that run at specific points in the build/run lifecycle.
 
 ### Hook Types
 
-- `pre-build.wasabi` - Runs before building
-- `post-build.wasabi` - Runs after building
-- `pre-run.wasabi` - Runs before running
-- `post-run.wasabi` - Runs after running
+- `pre_build_hook` - Runs before building
+- `post_build_hook` - Runs after building
+- `pre_run_hook` - Runs before running
+- `post_run_hook` - Runs after running
 
-### Hook Location
+### Hook Declaration
 
-Hooks are stored in `.stove/scripts/hooks/`
+Hooks are created within `.stove/stovetop.stove` using Stovetop's built in declaration functions. 
 
 ### Example Hook
 
-```wasabi
-# .stove/scripts/hooks/pre-build.wasabi
-log.info "Starting build for ${PROJECT} v${VERSION}"
-shell "git rev-parse --short HEAD > .build-commit"
-log.success "Pre-build checks complete"
-```
+```shell
+pre_build_hook("
+	echo 'Building ${PROJECT} to ${OUT}/${PROJECT}...';
 
----
+	if [ ! -d '${OUT}' ]; then 
+		echo 'Out directory does not exist... creating...';
+		mkdir -p ${OUT} && echo 'Directory ${OUT} created.';
+	fi
+")
 
-## 🌊 Wasabi Scripting
-
-Wasabi is Stovetop's built-in scripting language for automation tasks.
-
-### Running Scripts
-
-```bash
-# Run a Wasabi script
-stove script build-and-deploy.wasabi
-stove sc my-script.wasabi
-```
-
-### Available Commands
-
-#### Logging
-```wasabi
-log.info "Information message"
-log.warn "Warning message"
-log.error "Error message"
-log.debug "Debug message"
-log.success "Success message"
-```
-
-#### Shell Commands
-```wasabi
-shell "ls -la"
-shell "git status"
-shell "dotnet test"
-```
-
-### Variables
-
-Wasabi scripts have access to all Stovetop variables:
-
-- `${PROJECT}` - Project name
-- `${VERSION}` - Project version
-- `${RUNTIME}` - Runtime type
-- `${RUNTIME_VERSION}` - Runtime version
-- `${CWD}` - Current working directory
-- `${SCRIPT_DIR}` - Script directory
-- All custom variables from `stovetop.config.yaml`
-
-### Example Script
-
-```wasabi
-# deploy.wasabi
-log.info "Deploying ${PROJECT} v${VERSION}"
-
-log.info "Running tests..."
-shell "dotnet test"
-
-log.info "Building release..."
-shell "dotnet publish -c Release -o ${OUT}"
-
-log.info "Deploying to server..."
-shell "scp -r ${OUT}/* user@server:/apps/${PROJECT}/"
-
-log.success "Deployment complete!"
+post_build_hook("
+	if [ -f '${OUT}/${PROJECT}' ]; then 
+		sh verify-build-success.sh '${OUT}/${PROJECT}'; 
+	else 
+		echo 'Stove did not output an executable to ${OUT}/${PROJECT}, you may have errors in your code.'; 
+	fi
+")
 ```
 
 ---
@@ -259,23 +224,20 @@ stove backup clean
 
 ### Using Variables
 
-```yaml
-variables:
-  SRC: src
-  OUT: bin/Release
-  COMPILER_FLAGS: -O3 -Wall
+```js
+var SRC = "src"
+var OUT = "bin"
+var COMPILER_FLAGS = "-Wall -O3" 
 
-commands:
-  build: ${COMPILER_FLAGS} ${SRC}/*.c -o ${OUT}/app
+build_command("${COMPILER_FLAGS} ${SRC}/main.c -o ${OUT}/app")
 ```
 
 ### Custom Aliases
 
-```yaml
-aliases:
-  test: dotnet test --verbosity detailed
-  watch: dotnet watch run
-  deploy: dotnet publish -c Release
+```js
+alias("test", "dotnet test --verbosity detailed")
+alias("watch", "dotnet watch run")
+alias("deploy", "dotnet public -c Release")
 ```
 
 Then use them:
@@ -283,14 +245,6 @@ Then use them:
 stove test
 stove watch
 stove deploy
-```
-
-### Backup Flags
-
-Run commands with automatic backup:
-```bash
-stove run --backup
-stove build --backup my-backup-name
 ```
 
 ---
@@ -306,20 +260,15 @@ Stovetop/
 │       │   ├── pipeline/  # Build/run commands
 │       │   └── user/      # User-facing commands
 │       └── stovetop/      # Core functionality
-│           ├── config/    # Configuration system
 │           ├── handlers/  # Hook, variable, profile handlers
 │           └── templates/ # Runtime templates
 │
-├── Wasabi/                # Wasabi scripting language
-│   └── src/
-│       ├── commands/      # Wasabi commands (log, shell, etc.)
-│       ├── core/          # Interpreter core
-│       ├── runtime/       # Runtime services
-│       └── utils/         # Utilities
+├── Stovetop.ConfigParser/ # Parser for '.stove' format
+│   └── src/               # Lexer, Parser, Config model etc.
 │
 ├── Documentation/         # Project documentation
 ├── Examples/              # Example configurations
-└── README.md             # This file
+└── README.md              # This file (hello!)
 ```
 
 ---
@@ -342,11 +291,6 @@ dotnet run --project Stovetop/Stovetop.csproj -- <command>
 2. Register it in `CommandRegistry.cs`
 3. Implement the `Run()` method
 
-### Adding Wasabi Commands
-
-1. Create a new command class implementing `IWasabiCommand`
-2. Register it in `WasabiExecutor.cs`
-
 ---
 
 ## 🤝 Contributing
@@ -360,6 +304,12 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 - **Repository**: https://github.com/Yeskonerism/stovetop
 - **Documentation**: See `/Documentation` folder
 - **Examples**: See `/Examples` folder
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

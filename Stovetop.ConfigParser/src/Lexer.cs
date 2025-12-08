@@ -122,6 +122,9 @@ public class Lexer
             case '\n':
                 Advance();
                 return new Token(TokenType.Newline, "\\n", startLine, startColumn);
+            case ';':
+                Advance();
+                return new Token(TokenType.Newline, ";", startLine, startColumn);
         }
 
         // Quoted string
