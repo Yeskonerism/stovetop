@@ -41,7 +41,8 @@ public class ConfigCommand
             },
             {
                 ["--executable", "-e", "-exec"],
-                () => PrintValue(("Executable", config.Commands.GetValueOrDefault("executable", "")))
+                () =>
+                    PrintValue(("Executable", config.Commands.GetValueOrDefault("executable", "")))
             },
             {
                 ["--build", "-b", "-bc", "--build-command"],
@@ -86,10 +87,7 @@ public class ConfigCommand
         );
 
         // print runtime information
-        var runtimeInfo = new List<(string key, string value)>
-        {
-            ("Type", config.Runtime),
-        };
+        var runtimeInfo = new List<(string key, string value)> { ("Type", config.Runtime) };
 
         if (!string.IsNullOrEmpty(config.RuntimeVersion))
         {

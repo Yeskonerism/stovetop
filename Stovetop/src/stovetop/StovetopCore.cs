@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
-using Stovetop.ConfigParser;
 using Stovetop.Commands;
+using Stovetop.ConfigParser;
 using Stovetop.stovetop.handlers;
 using static System.Environment;
 
@@ -33,19 +33,25 @@ public static class StovetopCore
         StovetopBackupRoot = Path.Combine(StovetopConfigRoot, "cache/backups");
         StovetopScriptRoot = Path.Combine(StovetopConfigRoot, "scripts");
 
-        RunSilent = CommandRegistry.CurrentArgs != null && (
-            CommandRegistry.CurrentArgs.Contains("-s")
-            || CommandRegistry.CurrentArgs.Contains("--silent")
-        );
-        RunVerbose = CommandRegistry.CurrentArgs != null && (
-            CommandRegistry.CurrentArgs.Contains("-v")
-            || CommandRegistry.CurrentArgs.Contains("--verbose")
-        );
-        RunHookless = CommandRegistry.CurrentArgs != null && (
-            CommandRegistry.CurrentArgs.Contains("--no-hooks")
-            || CommandRegistry.CurrentArgs.Contains("-nh")
-            || CommandRegistry.CurrentArgs.Contains("--hookless")
-        );
+        RunSilent =
+            CommandRegistry.CurrentArgs != null
+            && (
+                CommandRegistry.CurrentArgs.Contains("-s")
+                || CommandRegistry.CurrentArgs.Contains("--silent")
+            );
+        RunVerbose =
+            CommandRegistry.CurrentArgs != null
+            && (
+                CommandRegistry.CurrentArgs.Contains("-v")
+                || CommandRegistry.CurrentArgs.Contains("--verbose")
+            );
+        RunHookless =
+            CommandRegistry.CurrentArgs != null
+            && (
+                CommandRegistry.CurrentArgs.Contains("--no-hooks")
+                || CommandRegistry.CurrentArgs.Contains("-nh")
+                || CommandRegistry.CurrentArgs.Contains("--hookless")
+            );
 
         SetupLogger();
 
@@ -146,15 +152,7 @@ public static class StovetopCore
         {
             Directory.CreateDirectory(StovetopConfigRoot);
 
-            foreach (
-                var subDirectory in new[]
-                {
-                    "profiles",
-                    "cache",
-                    "cache/backups",
-                    "scripts"
-                }
-            )
+            foreach (var subDirectory in new[] { "profiles", "cache", "cache/backups", "scripts" })
                 Directory.CreateDirectory(Path.Combine(StovetopConfigRoot, subDirectory));
         }
     }

@@ -26,7 +26,7 @@ public class ConfigBuilder
         "post_run_hook",
         "pre_deploy_hook",
         "post_deploy_hook",
-        "script"
+        "script",
     };
 
     public ConfigModel Build(ConfigFileNode ast)

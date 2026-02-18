@@ -16,7 +16,10 @@ public class Lexer
     }
 
     private char Current => _position < _source.Length ? _source[_position] : '\0';
-    private char Peek(int offset = 1) => _position + offset < _source.Length ? _source[_position + offset] : '\0';
+
+    private char Peek(int offset = 1) =>
+        _position + offset < _source.Length ? _source[_position + offset] : '\0';
+
     private bool IsAtEnd => _position >= _source.Length;
 
     private char Advance()
@@ -75,7 +78,8 @@ public class Lexer
             SkipLineContinuation();
             SkipComment();
 
-            if (IsAtEnd) break;
+            if (IsAtEnd)
+                break;
 
             var token = NextToken();
             if (token != null)
@@ -91,7 +95,8 @@ public class Lexer
     private Token? NextToken()
     {
         SkipWhitespace();
-        if (IsAtEnd) return null;
+        if (IsAtEnd)
+            return null;
 
         int startLine = _line;
         int startColumn = _column;

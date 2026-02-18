@@ -87,10 +87,11 @@ public static class InitCommand
             else
             {
                 // Use template default for run command
-                string defaultRun = StovetopCore.StovetopConfig.Commands.TryGetValue("run", out var runCmd)
+                string defaultRun =
+                    StovetopCore.StovetopConfig.Commands.TryGetValue("run", out var runCmd)
                     && !string.IsNullOrEmpty(runCmd)
-                    ? runCmd
-                    : "run --";
+                        ? runCmd
+                        : "run --";
 
                 StovetopCore.StovetopConfig.Commands["run"] = StovetopInputHandler.Ask(
                     "[STOVE] Enter run command",
@@ -99,10 +100,11 @@ public static class InitCommand
             }
 
             // Use template default for build command
-            string defaultBuild = StovetopCore.StovetopConfig.Commands.TryGetValue("build", out var buildCmd)
+            string defaultBuild =
+                StovetopCore.StovetopConfig.Commands.TryGetValue("build", out var buildCmd)
                 && !string.IsNullOrEmpty(buildCmd)
-                ? buildCmd
-                : "build";
+                    ? buildCmd
+                    : "build";
 
             StovetopCore.StovetopConfig.Commands["build"] = StovetopInputHandler.Ask(
                 "[STOVE] Enter build command",
@@ -162,9 +164,9 @@ public static class InitCommand
 
         // If positional argument is provided (e.g., "stove init dotnet")
         string? runtime = CommandRegistry.GetPositionalArgument("init", 0);
-        
+
         Console.WriteLine(runtime);
-        
+
         if (!string.IsNullOrEmpty(runtime))
         {
             return runtime;
@@ -203,13 +205,18 @@ public static class InitCommand
         // determine if executable
         string defaultExecutable = "${OUT}/" + defaultProjectName;
 
-        if (StovetopCore.StovetopConfig.Commands.TryGetValue("executable", out var execCmd)
-            && !string.IsNullOrEmpty(execCmd))
+        if (
+            StovetopCore.StovetopConfig.Commands.TryGetValue("executable", out var execCmd)
+            && !string.IsNullOrEmpty(execCmd)
+        )
         {
             StovetopCore.StovetopConfig.Commands["executable"] = defaultExecutable;
             if (StovetopCore.StovetopConfig.Commands.TryGetValue("build", out var buildCmd))
             {
-                StovetopCore.StovetopConfig.Commands["build"] = buildCmd.Replace("app", defaultProjectName);
+                StovetopCore.StovetopConfig.Commands["build"] = buildCmd.Replace(
+                    "app",
+                    defaultProjectName
+                );
             }
         }
 

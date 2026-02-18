@@ -21,7 +21,10 @@ public class ScriptCommand
         }
 
         // Check if it's a config-defined script first
-        if (StovetopCore.StovetopConfig?.Scripts.TryGetValue(scriptName, out string? scriptContent) == true)
+        if (
+            StovetopCore.StovetopConfig?.Scripts.TryGetValue(scriptName, out string? scriptContent)
+            == true
+        )
         {
             ExecuteInlineScript(scriptContent);
         }
@@ -37,16 +40,19 @@ public class ScriptCommand
             }
         }
     }
-    
+
     private static void ExecuteShellScript(string command)
     {
         var process = new ProcessStartInfo
         {
             FileName = Environment.OSVersion.Platform == PlatformID.Win32NT ? "cmd" : "bash",
-            Arguments = Environment.OSVersion.Platform == PlatformID.Win32NT ? $"/c \"{command}\"" : $"-c \"{command}\"",
+            Arguments =
+                Environment.OSVersion.Platform == PlatformID.Win32NT
+                    ? $"/c \"{command}\""
+                    : $"-c \"{command}\"",
             UseShellExecute = false,
             RedirectStandardOutput = false,
-            RedirectStandardError = false
+            RedirectStandardError = false,
         };
 
         var proc = Process.Start(process);

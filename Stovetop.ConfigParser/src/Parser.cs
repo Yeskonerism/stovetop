@@ -12,12 +12,16 @@ public class Parser
     }
 
     private Token Current => _position < _tokens.Count ? _tokens[_position] : _tokens[^1];
-    private Token Peek(int offset = 1) => _position + offset < _tokens.Count ? _tokens[_position + offset] : _tokens[^1];
+
+    private Token Peek(int offset = 1) =>
+        _position + offset < _tokens.Count ? _tokens[_position + offset] : _tokens[^1];
+
     private bool IsAtEnd => Current.Type == TokenType.EOF;
 
     private Token Advance()
     {
-        if (!IsAtEnd) _position++;
+        if (!IsAtEnd)
+            _position++;
         return _tokens[_position - 1];
     }
 
@@ -38,8 +42,11 @@ public class Parser
 
     private Token Expect(TokenType type, string message)
     {
-        if (Check(type)) return Advance();
-        throw new ParseException($"{message} at line {Current.Line}, column {Current.Column}. Got {Current.Type} instead.");
+        if (Check(type))
+            return Advance();
+        throw new ParseException(
+            $"{message} at line {Current.Line}, column {Current.Column}. Got {Current.Type} instead."
+        );
     }
 
     private void SkipNewlines()
@@ -148,14 +155,19 @@ public class Parser
                 // Flush accumulated text (without trailing space)
                 if (textBuilder.Length > 0)
                 {
-                    parts.Add(new StringLiteralNode(textBuilder.ToString(), startLine, startColumn));
+                    parts.Add(
+                        new StringLiteralNode(textBuilder.ToString(), startLine, startColumn)
+                    );
                     textBuilder.Clear();
                     needsSpace = false;
                 }
 
                 // Parse variable reference
                 Advance(); // skip {
-                var varName = Expect(TokenType.Identifier, "Expected variable name in interpolation");
+                var varName = Expect(
+                    TokenType.Identifier,
+                    "Expected variable name in interpolation"
+                );
                 Expect(TokenType.CloseBrace, "Expected '}' after variable name");
                 parts.Add(new VariableReferenceNode(varName.Value, varName.Line, varName.Column));
                 needsSpace = true; // next text token should have space before it
@@ -216,14 +228,19 @@ public class Parser
                 // Flush accumulated text
                 if (textBuilder.Length > 0)
                 {
-                    parts.Add(new StringLiteralNode(textBuilder.ToString(), startLine, startColumn));
+                    parts.Add(
+                        new StringLiteralNode(textBuilder.ToString(), startLine, startColumn)
+                    );
                     textBuilder.Clear();
                     needsSpace = false;
                 }
 
                 // Parse variable reference
                 Advance(); // skip {
-                var varName = Expect(TokenType.Identifier, "Expected variable name in interpolation");
+                var varName = Expect(
+                    TokenType.Identifier,
+                    "Expected variable name in interpolation"
+                );
                 Expect(TokenType.CloseBrace, "Expected '}' after variable name");
                 parts.Add(new VariableReferenceNode(varName.Value, varName.Line, varName.Column));
                 needsSpace = true;
@@ -268,5 +285,6 @@ public class Parser
 
 public class ParseException : Exception
 {
-    public ParseException(string message) : base(message) { }
+    public ParseException(string message)
+        : base(message) { }
 }

@@ -21,7 +21,12 @@ public class StovetopLogger
             Write(message, ConsoleColor.Cyan, "[DEBUG]");
     }
 
-    private void Write(string message, ConsoleColor color, string prefix, bool overrideSilent = false)
+    private void Write(
+        string message,
+        ConsoleColor color,
+        string prefix,
+        bool overrideSilent = false
+    )
     {
         if (!overrideSilent && Silent)
             return;

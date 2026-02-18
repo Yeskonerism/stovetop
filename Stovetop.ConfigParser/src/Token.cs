@@ -3,25 +3,25 @@ namespace Stovetop.ConfigParser;
 public enum TokenType
 {
     // Keywords
-    Var,            // var keyword for variable declarations
+    Var, // var keyword for variable declarations
 
     // Literals
-    Identifier,     // project, version, runtime, alias, etc.
-    String,         // quoted "string" or raw text
+    Identifier, // project, version, runtime, alias, etc.
+    String, // quoted "string" or raw text
 
     // Delimiters
-    OpenParen,      // (
-    CloseParen,     // )
-    OpenBrace,      // { for variable interpolation
-    CloseBrace,     // } for variable interpolation
-    Equals,         // = for variable assignment
-    Comma,          // , for separating arguments
+    OpenParen, // (
+    CloseParen, // )
+    OpenBrace, // { for variable interpolation
+    CloseBrace, // } for variable interpolation
+    Equals, // = for variable assignment
+    Comma, // , for separating arguments
 
     // Whitespace/Structure
-    Newline,        // end of statement
+    Newline, // end of statement
 
     // End
-    EOF
+    EOF,
 }
 
 public class Token

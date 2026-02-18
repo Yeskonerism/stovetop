@@ -49,10 +49,13 @@ public static class StovetopHookHandler
         var process = new ProcessStartInfo
         {
             FileName = Environment.OSVersion.Platform == PlatformID.Win32NT ? "cmd" : "bash",
-            Arguments = Environment.OSVersion.Platform == PlatformID.Win32NT ? $"/c \"{command}\"" : $"-c \"{command}\"",
+            Arguments =
+                Environment.OSVersion.Platform == PlatformID.Win32NT
+                    ? $"/c \"{command}\""
+                    : $"-c \"{command}\"",
             UseShellExecute = false,
             RedirectStandardOutput = false,
-            RedirectStandardError = false
+            RedirectStandardError = false,
         };
 
         var proc = Process.Start(process);
@@ -68,15 +71,18 @@ public static class StovetopHookHandler
         string? hookKey = hookType switch
         {
             HookType.PreRun => "pre_run",
-            HookType.PostRun => "post_run", 
+            HookType.PostRun => "post_run",
             HookType.PreBuild => "pre_build",
             HookType.PostBuild => "post_build",
             HookType.PreDeploy => "pre_deploy",
             HookType.PostDeploy => "post_deploy",
-            _ => null
+            _ => null,
         };
 
-        if (hookKey != null && StovetopCore.StovetopConfig.Hooks.TryGetValue(hookKey, out string? hookScript))
+        if (
+            hookKey != null
+            && StovetopCore.StovetopConfig.Hooks.TryGetValue(hookKey, out string? hookScript)
+        )
         {
             return hookScript;
         }
