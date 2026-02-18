@@ -27,7 +27,14 @@ public class ScriptCommand
         }
         else
         {
-            StovetopCore.StovetopLogger?.Error("Script not found");
+            if (!File.Exists(scriptName))
+            {
+                StovetopCore.StovetopLogger?.Error("Script not found");
+            }
+            else
+            {
+                ExecuteShellScript(scriptName);
+            }
         }
     }
     

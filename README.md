@@ -175,7 +175,7 @@ Hooks are created within `.stove/stovetop.stove` using Stovetop's built in decla
 
 ### Example Hook
 
-```shell
+```js
 pre_build_hook("
 	echo 'Building ${PROJECT} to ${OUT}/${PROJECT}...';
 

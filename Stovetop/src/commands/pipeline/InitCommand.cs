@@ -161,7 +161,10 @@ public static class InitCommand
         }
 
         // If positional argument is provided (e.g., "stove init dotnet")
-        string? runtime = CommandRegistry.GetPositionalArgument("init", 1);
+        string? runtime = CommandRegistry.GetPositionalArgument("init", 0);
+        
+        Console.WriteLine(runtime);
+        
         if (!string.IsNullOrEmpty(runtime))
         {
             return runtime;

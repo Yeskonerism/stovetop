@@ -64,14 +64,7 @@ public class CommandRegistry
             ConfigCommand.Run,
             ["cfg"]
         );
-        RegisterCommand(
-            "script",
-            "",
-            "",
-            "user",
-            ScriptCommand.Run,
-            ["sc"]
-        );
+        RegisterCommand("script", "", "", "user", ScriptCommand.Run, ["sc"]);
     }
 
     public static void RegisterCommand(
@@ -113,7 +106,7 @@ public class CommandRegistry
     {
         foreach (var command in Commands)
         {
-            if (MatchesCommand(command, name))
+            if (!MatchesCommand(command, name))
                 return command;
         }
 
@@ -192,7 +185,7 @@ public class CommandRegistry
 
         return -1;
     }
-    
+
     public static string? GetFlagValue(string flag)
     {
         int flagPosition = GetFlagPosition(flag);
@@ -204,7 +197,7 @@ public class CommandRegistry
                 return CurrentArgs[flagPosition + 1];
             }
         }
-        
+
         return null;
     }
 }

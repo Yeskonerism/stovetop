@@ -115,7 +115,8 @@ public static class StovetopCore
         sb.AppendLine("// Commands");
         foreach (var command in StovetopConfig.Commands)
         {
-            sb.AppendLine($"{command.Key}_command({command.Value})");
+            string appendCommand = command.Key == "executable" ? "" : "_command";
+            sb.AppendLine($"{command.Key}{appendCommand}(\"{command.Value}\")");
         }
         sb.AppendLine();
 
