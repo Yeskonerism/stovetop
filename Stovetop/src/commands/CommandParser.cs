@@ -126,75 +126,73 @@ public class CommandParser
         int positionalArgumentIndex = 1
     )
     {
-        // Check if backup flag is set (--backup)
         if (
             CommandRegistry.GetPositionalArgument(command.Name, positionalArgumentIndex)
-            == "--backup"
+            != "--backup"
         )
         {
-            string? positionalArgument = CommandRegistry.GetPositionalArgument(
-                command.Name,
-                positionalArgumentIndex + 1
-            );
-
-            // Handle missing backup ID
-            if (string.IsNullOrEmpty(positionalArgument))
-            {
-                StovetopCore.StovetopLogger?.Error(
-                    "Please specify a backup ID or 'latest' (e.g., stove run --backup latest)"
-                );
-                return;
-            }
-
-            // Resolve "latest" to actual backup ID
-            string? backupId =
-                positionalArgument == "latest"
-                    ? BackupCommand.GetLatestBackup()
-                    : positionalArgument;
-
-            // Validate backup exists
-            if (!BackupCommand.BackupExists(backupId!))
-            {
-                StovetopCore.StovetopLogger?.Error($"Backup '{backupId}' does not exist");
-                return;
-            }
-
-            // Validate backup root is initialized
-            if (string.IsNullOrEmpty(StovetopCore.StovetopBackupRoot))
-            {
-                StovetopCore.StovetopLogger?.Error("Backup directory not found");
-                return;
-            }
-
-            // Build path to back up config
-            string pathToBackupConfig = Path.Combine(
-                StovetopCore.StovetopBackupRoot,
-                $"{backupId}-stovetop-backup.json"
-            );
-            string? originalConfigPath = StovetopCore.StovetopConfigPath;
-
-            try
-            {
-                // Temporarily swap to back up config
-                StovetopCore.StovetopConfigPath = pathToBackupConfig;
-                StovetopCore.StovetopLogger?.Info($"Using backup config: {backupId}");
-                StovetopCore.LoadConfig();
-                StovetopCore.StovetopRuntime = StovetopCore.StovetopConfig?.Runtime;
-
-                // Execute the command
-                command.Command.Invoke();
-            }
-            finally
-            {
-                // Always restore original config path and reload
-                StovetopCore.StovetopConfigPath = originalConfigPath;
-                StovetopCore.LoadConfig();
-            }
-        }
-        else
-        {
-            // No backup flag, execute normally
             command.Command.Invoke();
+            return;
+        }
+
+        string? positionalArgument = CommandRegistry.GetPositionalArgument(
+            command.Name,
+            positionalArgumentIndex + 1
+        );
+
+        // Handle missing backup ID
+        if (string.IsNullOrEmpty(positionalArgument))
+        {
+            StovetopCore.StovetopLogger?.Error(
+                "Please specify a backup ID or 'latest' (e.g., stove run --backup latest)"
+            );
+            return;
+        }
+
+        // Resolve "latest" to actual backup ID
+        string? backupId =
+            positionalArgument == "latest" ? BackupCommand.GetLatestBackup() : positionalArgument;
+        if (!BackupCommand.BackupExists(backupId!))
+        {
+            StovetopCore.StovetopLogger?.Error($"Backup '{backupId}' does not exist");
+            return;
+        }
+
+        // Validate backup root is initialized
+        if (string.IsNullOrEmpty(StovetopCore.StovetopBackupRoot))
+        {
+            StovetopCore.StovetopLogger?.Error("Backup directory not found");
+            return;
+        }
+
+        ExecuteBackupCommand(command, backupId!);
+    }
+
+    private static void ExecuteBackupCommand(StovetopCommand command, string backupId)
+    {
+        // Build path to back up config
+        string pathToBackupConfig = Path.Combine(
+            StovetopCore.StovetopBackupRoot,
+            $"{backupId}-stovetop-backup.json"
+        );
+        string? originalConfigPath = StovetopCore.StovetopConfigPath;
+
+        try
+        {
+            // Temporarily swap to back up config
+            StovetopCore.StovetopConfigPath = pathToBackupConfig;
+            StovetopCore.StovetopLogger?.Info($"Using backup config: {backupId}");
+            StovetopCore.LoadConfig();
+            StovetopCore.StovetopRuntime = StovetopCore.StovetopConfig?.Runtime;
+
+            // Execute the command
+            command.Command.Invoke();
+        }
+        finally
+        {
+            // Always restore original config path and reload
+            StovetopCore.StovetopConfigPath = originalConfigPath;
+            StovetopCore.LoadConfig();
         }
     }
 

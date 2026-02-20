@@ -9,7 +9,6 @@ namespace Stovetop.stovetop;
 
 public static class StovetopCore
 {
-    public static string? StovetopRoot;
     public static string? StovetopConfigRoot;
     public static string? StovetopConfigPath;
     public static bool StovetopConfigExists;
@@ -18,7 +17,6 @@ public static class StovetopCore
     public static string? StovetopRuntime;
 
     public static string? StovetopBackupRoot;
-    public static string? StovetopScriptRoot;
 
     public static bool RunSilent;
     public static bool RunVerbose;
@@ -26,47 +24,32 @@ public static class StovetopCore
 
     public static void Initialize(bool ignoreConfig = false)
     {
-        StovetopRoot = Directory.GetCurrentDirectory();
-        StovetopConfigRoot = Path.Combine(StovetopRoot, ".stove");
-        StovetopConfigPath = Path.Combine(StovetopConfigRoot, "stovetop.stove");
+        string stovetopRoot = Directory.GetCurrentDirectory();
+        StovetopConfigRoot = Path.Combine(stovetopRoot, StovetopConstants.ConfigDirName);
+        StovetopConfigPath = Path.Combine(StovetopConfigRoot, StovetopConstants.ConfigFileName);
 
-        StovetopBackupRoot = Path.Combine(StovetopConfigRoot, "cache/backups");
-        StovetopScriptRoot = Path.Combine(StovetopConfigRoot, "scripts");
+        StovetopBackupRoot = Path.Combine(StovetopConfigRoot, StovetopConstants.ConfigBackupFolder);
 
-        RunSilent =
-            CommandRegistry.CurrentArgs != null
-            && (
-                CommandRegistry.CurrentArgs.Contains("-s")
-                || CommandRegistry.CurrentArgs.Contains("--silent")
-            );
-        RunVerbose =
-            CommandRegistry.CurrentArgs != null
-            && (
-                CommandRegistry.CurrentArgs.Contains("-v")
-                || CommandRegistry.CurrentArgs.Contains("--verbose")
-            );
-        RunHookless =
-            CommandRegistry.CurrentArgs != null
-            && (
-                CommandRegistry.CurrentArgs.Contains("--no-hooks")
-                || CommandRegistry.CurrentArgs.Contains("-nh")
-                || CommandRegistry.CurrentArgs.Contains("--hookless")
-            );
-
+        if (CommandRegistry.CurrentArgs != null)
+        {
+            RunSilent = CommandRegistry.CurrentArgs.Contains(StovetopConstants.SilentFlag);
+            RunVerbose = CommandRegistry.CurrentArgs.Contains(StovetopConstants.VerboseFlag);
+            RunHookless = CommandRegistry.CurrentArgs.Contains(StovetopConstants.NoHooksFlag);
+        }
+        
         SetupLogger();
 
-        if (!ignoreConfig)
+        if (ignoreConfig)
+            return;
+        
+        if (!VerifyConfig())
         {
-            if (VerifyConfig())
-            {
-                LoadConfig();
-                StovetopRuntime = StovetopConfig?.Runtime;
-            }
-            else
-            {
-                StovetopLogger?.Error("No config found");
-            }
+            StovetopLogger?.Error("No config found");
+            return;
         }
+
+        LoadConfig();
+        StovetopRuntime = StovetopConfig?.Runtime;
     }
 
     public static bool VerifyConfig(bool ignoreConfig = false)
@@ -83,10 +66,10 @@ public static class StovetopCore
 
     public static void LoadConfig()
     {
-        if (StovetopConfigPath != null)
-        {
-            StovetopConfig = StovetopConfigParser.ParseFile(StovetopConfigPath);
-        }
+        if (StovetopConfigPath == null)
+            return;
+
+        StovetopConfig = StovetopConfigParser.ParseFile(StovetopConfigPath);
     }
 
     public static void SaveConfig()
@@ -148,18 +131,20 @@ public static class StovetopCore
 
     public static void CreateDefaultStructure()
     {
-        if (StovetopConfigRoot != null)
-        {
-            Directory.CreateDirectory(StovetopConfigRoot);
+        if (StovetopConfigRoot == null)
+            return;
 
-            foreach (var subDirectory in new[] { "profiles", "cache", "cache/backups", "scripts" })
-                Directory.CreateDirectory(Path.Combine(StovetopConfigRoot, subDirectory));
-        }
+        Directory.CreateDirectory(StovetopConfigRoot);
+
+        foreach (var subDirectory in new[] { "profiles", "cache", "cache/backups", "scripts" })
+            Directory.CreateDirectory(Path.Combine(StovetopConfigRoot, subDirectory));
     }
 
     public static bool VerifyRuntime()
     {
-        // TODO | Runtime verification with "which/where" command and stdout + stderr redirect and reading
+        if (StovetopRuntime == null)
+            return false;
+        
         ProcessStartInfo startInfo = new()
         {
             Arguments = StovetopRuntime,
@@ -169,10 +154,7 @@ public static class StovetopCore
             CreateNoWindow = true,
         };
 
-        if (OSVersion.Platform == PlatformID.Unix)
-            startInfo.FileName = "which";
-        else if (OSVersion.Platform == PlatformID.Win32NT)
-            startInfo.FileName = "where";
+        startInfo.FileName = (OSVersion.Platform == PlatformID.Unix) ? "which" : "where";
 
         using (Process? process = Process.Start(startInfo))
         {

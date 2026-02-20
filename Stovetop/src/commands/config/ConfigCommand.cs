@@ -57,15 +57,15 @@ public class ConfigCommand
         // search for flags
         foreach (var flag in flags)
         {
-            if (CommandRegistry.CurrentArgs != null)
+            if (CommandRegistry.CurrentArgs == null)
+                break;
+
+            foreach (var arg in CommandRegistry.CurrentArgs)
             {
-                foreach (var arg in CommandRegistry.CurrentArgs)
+                if (flag.Key.Contains(arg))
                 {
-                    if (flag.Key.Contains(arg))
-                    {
-                        foundFlags = true;
-                        flag.Value.Invoke();
-                    }
+                    foundFlags = true;
+                    flag.Value.Invoke();
                 }
             }
         }

@@ -9,8 +9,17 @@ public class BuildCommand
     public static void Run()
     {
         // verify runtime exists
-        if (!StovetopCore.VerifyRuntime())
+        if (!StovetopCore.StovetopConfigExists)
             return;
+        
+        if (StovetopCore.StovetopConfig == null)
+            return;  // Guard against null
+        
+        if (string.IsNullOrEmpty(StovetopCore.StovetopRuntime))
+        {
+            StovetopCore.StovetopLogger?.Error("Runtime not configured");
+            return;
+        }
 
         string? buildCmd = null;
         StovetopCore.StovetopConfig?.Commands.TryGetValue("build", out buildCmd);

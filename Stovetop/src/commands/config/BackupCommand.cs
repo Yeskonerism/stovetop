@@ -46,20 +46,18 @@ public class BackupCommand
         RevertToBackup(resolvedBackupId);
     }
 
-    private static string? ResolveBackupId(string backupId)
-    {
-        return (backupId == "latest") ? GetLatestBackup() : backupId;
-    }
+    private static string? ResolveBackupId(string backupId) =>
+        (backupId == "latest") ? GetLatestBackup() : backupId;
 
     private static string[]? BackupList()
     {
-        if (StovetopCore.StovetopBackupRoot != null)
-            return Directory
-                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove")
-                .OrderByDescending(f => Path.GetFileName(f))
-                .ToArray();
+        if (StovetopCore.StovetopBackupRoot == null)
+            return null;
 
-        return null;
+        return Directory
+            .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove")
+            .OrderByDescending(f => Path.GetFileName(f))
+            .ToArray();
     }
 
     private static void ListBackups()
@@ -127,93 +125,85 @@ public class BackupCommand
 
     public static void CreateBackup()
     {
-        if (StovetopCore.StovetopBackupRoot != null)
-        {
-            string backupPath = Path.Combine(
-                StovetopCore.StovetopBackupRoot,
-                $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}-stovetop-backup.stove"
-            );
+        if (StovetopCore.StovetopBackupRoot == null)
+            return;
 
-            if (File.Exists(StovetopCore.StovetopConfigPath))
-            {
-                File.Copy(StovetopCore.StovetopConfigPath, backupPath, true);
-                StovetopCore.StovetopLogger?.Success($"Backup created: {backupPath}");
-            }
-        }
+        if (!StovetopCore.StovetopConfigExists)
+            return;
+
+        string backupPath = Path.Combine(
+            StovetopCore.StovetopBackupRoot,
+            $"{DateTime.Now:yyyy-MM-dd-HH:mm:ss}-stovetop-backup.stove"
+        );
+
+        File.Copy(StovetopCore.StovetopConfigPath, backupPath, true);
+        StovetopCore.StovetopLogger?.Success($"Backup created: {backupPath}");
     }
 
     public static void RevertToBackup(string backupId)
     {
-        if (StovetopCore.StovetopConfigRoot != null)
+        if (StovetopCore.StovetopConfigRoot == null)
+            return;
+
+        string backupPath = Path.Combine(StovetopCore.StovetopConfigRoot, "cache/backups");
+        string backupFile = Path.Combine(backupPath, $"{backupId}-stovetop-backup.stove");
+
+        if (!File.Exists(backupFile))
         {
-            string backupPath = Path.Combine(StovetopCore.StovetopConfigRoot, "cache/backups");
-            string backupFile = Path.Combine(backupPath, $"{backupId}-stovetop-backup.stove");
+            StovetopCore.StovetopLogger?.Error($"Backup '{backupId}' not found");
+            return;
+        }
 
-            if (!File.Exists(backupFile))
-            {
-                StovetopCore.StovetopLogger?.Error($"Backup '{backupId}' not found");
-                return;
-            }
+        try
+        {
+            StovetopCore.StovetopLogger?.Info($"Creating safety backup before reverting...");
+            CreateBackup();
 
-            try
-            {
-                StovetopCore.StovetopLogger?.Info($"Creating safety backup before reverting...");
-                CreateBackup();
+            StovetopCore.StovetopLogger?.Info($"Reverting to backup: {backupId}");
+            if (StovetopCore.StovetopConfigPath != null)
+                File.Copy(backupFile, StovetopCore.StovetopConfigPath, true);
 
-                StovetopCore.StovetopLogger?.Info($"Reverting to backup: {backupId}");
-                if (StovetopCore.StovetopConfigPath != null)
-                    File.Copy(backupFile, StovetopCore.StovetopConfigPath, true);
-
-                StovetopCore.StovetopLogger?.Success(
-                    $"Successfully reverted to backup: {backupId}"
-                );
-            }
-            catch (Exception e)
-            {
-                StovetopCore.StovetopLogger?.Error($"Failed to revert: {e.Message}");
-            }
+            StovetopCore.StovetopLogger?.Success($"Successfully reverted to backup: {backupId}");
+        }
+        catch (Exception e)
+        {
+            StovetopCore.StovetopLogger?.Error($"Failed to revert: {e.Message}");
         }
     }
 
     // get the most recent backup
     public static string? GetLatestBackup()
     {
-        if (StovetopCore.StovetopConfigRoot != null)
-        {
-            string backupPath = Path.Combine(StovetopCore.StovetopConfigRoot, "cache/backups");
+        if (StovetopCore.StovetopConfigRoot == null)
+            return null;
 
-            if (!Directory.Exists(backupPath))
-                return null;
+        string backupPath = Path.Combine(StovetopCore.StovetopConfigRoot, "cache/backups");
 
-            var backups = Directory
-                .GetFiles(backupPath, "*-stovetop-backup.stove")
-                .OrderByDescending(f => File.GetCreationTime(f))
-                .ToArray();
+        if (!Directory.Exists(backupPath))
+            return null;
 
-            if (backups.Length == 0)
-                return null;
+        var backups = Directory
+            .GetFiles(backupPath, "*-stovetop-backup.stove")
+            .OrderByDescending(f => File.GetCreationTime(f))
+            .ToArray();
 
-            string fileName = Path.GetFileName(backups[0]);
-            return fileName.Replace("-stovetop-backup.stove", "");
-        }
+        if (backups.Length == 0)
+            return null;
 
-        return null;
+        string fileName = Path.GetFileName(backups[0]);
+        return fileName.Replace("-stovetop-backup.stove", "");
     }
 
-    public static bool HasBackups()
-    {
-        return Directory.Exists(StovetopCore.StovetopBackupRoot)
-            && Directory.GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove").Length
-                > 0;
-    }
+    public static bool HasBackups() =>
+        Directory.Exists(StovetopCore.StovetopBackupRoot)
+        && Directory.GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove").Length
+            > 0;
 
-    public static bool BackupExists(string backupId)
-    {
-        return StovetopCore.StovetopBackupRoot != null
-            && File.Exists(
-                Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.stove")
-            );
-    }
+    public static bool BackupExists(string backupId) =>
+        StovetopCore.StovetopBackupRoot != null
+        && File.Exists(
+            Path.Combine(StovetopCore.StovetopBackupRoot, $"{backupId}-stovetop-backup.stove")
+        );
 
     // TODO | Clean backups method, with numbered limit, max/min date etc.
     public static void CleanBackups()
@@ -242,21 +232,20 @@ public class BackupCommand
 
         StovetopCore.StovetopLogger?.Info("Cleaning backups...");
 
-        if (StovetopCore.StovetopBackupRoot != null)
-        {
-            string[] backups = Directory
-                .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove")
-                .OrderBy(f => File.GetCreationTime(f))
-                .ToArray();
+        if (StovetopCore.StovetopBackupRoot == null) return;
+    
+        string[] backups = Directory
+            .GetFiles(StovetopCore.StovetopBackupRoot, "*-stovetop-backup.stove")
+            .OrderBy(f => File.GetCreationTime(f))
+            .ToArray();
 
-            int count = 0;
-            foreach (var backup in backups)
-            {
-                File.Delete(backup);
-                count++;
-                if (count >= amount)
-                    break;
-            }
+        int count = 0;
+        foreach (var backup in backups)
+        {
+            File.Delete(backup);
+            count++;
+            if (count >= amount)
+                break;
         }
     }
 }

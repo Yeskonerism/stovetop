@@ -9,31 +9,37 @@ public class RunCommand
     public static void Run()
     {
         // verify runtime exists
-        if (!StovetopCore.VerifyRuntime())
+        if (!StovetopCore.StovetopConfigExists)
             return;
 
         // Determine what to run: prefer executable if set, otherwise use runtime + runCommand
         string? fileName;
         string[] arguments;
 
-        string? executableCmd = null;
+        string executableCmd = null;
+
+        // Attempt to get executable command
         StovetopCore.StovetopConfig?.Commands.TryGetValue("executable", out executableCmd);
 
-        if (!string.IsNullOrEmpty(executableCmd))
+        // Determine execution mode
+        bool useExecutable = !string.IsNullOrWhiteSpace(executableCmd);
+
+        if (useExecutable)
         {
-            // Running a compiled executable directly
-            string executable = StovetopVariableHandler.SubstituteVariables(executableCmd);
-            StovetopCore.StovetopLogger?.Info($"Using executable: {executable}");
-            fileName = executable;
-            arguments = Array.Empty<string>(); // Executables typically don't need runtime args
+            fileName = StovetopVariableHandler.SubstituteVariables(executableCmd!);
+            arguments = Array.Empty<string>();
+
+            StovetopCore.StovetopLogger?.Info($"Using executable: {fileName}");
         }
         else
         {
-            // Running with a runtime (e.g., dotnet, python, node)
             fileName = StovetopCore.StovetopRuntime;
-            string? runCmd = null;
+
+            string runCmd = null;
+
             StovetopCore.StovetopConfig?.Commands.TryGetValue("run", out runCmd);
             string runCommand = StovetopVariableHandler.SubstituteVariables(runCmd ?? "");
+
             arguments = CommandParser.ParseArguments(runCommand);
         }
 

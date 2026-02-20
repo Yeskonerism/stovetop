@@ -97,16 +97,13 @@ public class CommandRegistry
     }
 
     // command getting and fetching
-    public static StovetopCommand? GetCommand(string? name)
-    {
-        return GetCommandByNameOrAlias(name!);
-    }
+    public static StovetopCommand? GetCommand(string? name) => GetCommandByNameOrAlias(name);
 
     private static StovetopCommand? GetCommandByNameOrAlias(string name)
     {
         foreach (var command in Commands)
         {
-            if (!MatchesCommand(command, name))
+            if (MatchesCommand(command, name))
                 return command;
         }
 
@@ -115,31 +112,29 @@ public class CommandRegistry
 
     private static bool MatchesCommand(StovetopCommand command, string name)
     {
-        return command.Aliases != null
-            && (
-                command.Name.Equals(name, StringComparison.OrdinalIgnoreCase)
-                || command.Aliases.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase))
-            );
+        if (command.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+            return true;
+    
+        return command.Aliases?.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? false;
     }
 
     public static int GetCommandIndex(string commandName)
     {
-        if (CurrentArgs != null)
-            for (int i = 0; i < CurrentArgs.Length; i++)
-            {
-                // check for both exact name match or alias (GetCommand already handles aliases)
-                if (IsCommandAtIndex(i, commandName))
-                    return i;
-            }
+        if (CurrentArgs == null)
+            return -1;
+
+        for (int i = 0; i < CurrentArgs.Length; i++)
+        {
+            // check for both exact name match or alias (GetCommand already handles aliases)
+            if (IsCommandAtIndex(i, commandName))
+                return i;
+        }
 
         return -1; // Not found
     }
 
-    private static bool IsCommandAtIndex(int index, string commandName)
-    {
-        var command = GetCommand(CurrentArgs?[index]);
-        return command?.Name == commandName;
-    }
+    private static bool IsCommandAtIndex(int index, string commandName) =>
+        GetCommand(CurrentArgs?[index])?.Name == commandName;
 
     public static string? GetPositionalArgument(string commandName, int position)
     {
@@ -168,19 +163,19 @@ public class CommandRegistry
 
     public static int GetFlagPosition(string flag)
     {
+        if (CurrentArgs == null)
+            return -1;
+
         int position = 0;
 
-        if (CurrentArgs != null)
+        foreach (var f in CurrentArgs)
         {
-            foreach (var f in CurrentArgs)
+            if (f == flag)
             {
-                if (f == flag)
-                {
-                    return position;
-                }
-
-                position++;
+                return position;
             }
+
+            position++;
         }
 
         return -1;
@@ -190,14 +185,13 @@ public class CommandRegistry
     {
         int flagPosition = GetFlagPosition(flag);
 
-        if (flagPosition != -1)
-        {
-            if (CurrentArgs != null && CurrentArgs.Length > GetFlagPosition(flag) + 1)
-            {
-                return CurrentArgs[flagPosition + 1];
-            }
-        }
+        if (flagPosition == -1)
+            return null;
+        if (CurrentArgs == null)
+            return null;
+        if (CurrentArgs.Length <= flagPosition + 1)
+            return null;
 
-        return null;
+        return CurrentArgs[flagPosition + 1];
     }
 }
