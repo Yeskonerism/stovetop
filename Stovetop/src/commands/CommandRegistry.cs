@@ -99,11 +99,11 @@ public class CommandRegistry
     // command getting and fetching
     public static StovetopCommand? GetCommand(string? name) => GetCommandByNameOrAlias(name);
 
-    private static StovetopCommand? GetCommandByNameOrAlias(string name)
+    private static StovetopCommand? GetCommandByNameOrAlias(string? name)
     {
         foreach (var command in Commands)
         {
-            if (MatchesCommand(command, name))
+            if (name != null && MatchesCommand(command, name))
                 return command;
         }
 
