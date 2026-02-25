@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Stovetop.Exceptions;
 using Stovetop.stovetop;
 using Stovetop.stovetop.handlers;
 
@@ -10,7 +11,7 @@ public class RunCommand
     {
         // verify runtime exists
         if (!StovetopCore.StovetopConfigExists)
-            return;
+            throw new StovetopNonexistentConfigException();
 
         // Determine what to run: prefer executable if set, otherwise use runtime + runCommand
         string? fileName;
@@ -56,10 +57,7 @@ public class RunCommand
 
         var process = Process.Start(runProcess);
         if (process == null)
-        {
-            StovetopCore.StovetopLogger?.Error("Failed to start run process");
-            return;
-        }
+            throw new StovetopProcessStartFailedException();
         process.WaitForExit();
 
         if (process.ExitCode != 0)

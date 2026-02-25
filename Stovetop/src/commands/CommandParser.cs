@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Stovetop.Commands.Config;
+using Stovetop.Exceptions;
 using Stovetop.stovetop;
 using Stovetop.stovetop.handlers;
 
@@ -12,6 +13,9 @@ public class CommandParser
         if (args.Length > 0 && args[0] != "init" && !ignoreConfig)
         {
             StovetopCore.LoadConfig();
+
+            if (!StovetopCore.StovetopConfigExists)
+                throw new StovetopNonexistentConfigException();
         }
 
         if (args.Length == 0)
@@ -31,6 +35,9 @@ public class CommandParser
                 && (command.Name == commandName || command.Aliases.Contains(commandName))
             )
             {
+                if(command.Category == StovetopCommand.CommandCatagory.Pipeline)
+                    StovetopCore.VerifyRuntime();
+                
                 if (SupportsBackupFlag(command.Name))
                     ExecuteWithOptionalBackup(
                         command,
@@ -153,17 +160,11 @@ public class CommandParser
         string? backupId =
             positionalArgument == "latest" ? BackupCommand.GetLatestBackup() : positionalArgument;
         if (!BackupCommand.BackupExists(backupId!))
-        {
-            StovetopCore.StovetopLogger?.Error($"Backup '{backupId}' does not exist");
-            return;
-        }
+            throw new StovetopBackupNotFoundException(backupId!);
 
         // Validate backup root is initialized
         if (string.IsNullOrEmpty(StovetopCore.StovetopBackupRoot))
-        {
-            StovetopCore.StovetopLogger?.Error("Backup directory not found");
-            return;
-        }
+            throw new StovetopUninitialisedException();
 
         ExecuteBackupCommand(command, backupId!);
     }

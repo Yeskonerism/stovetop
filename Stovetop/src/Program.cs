@@ -15,8 +15,14 @@ public class Program
             || args.Contains("help")
             || args.Contains("h");
 
-        StovetopCore.Initialize(ignoreConfig);
-
-        CommandParser.ParseCommands(args, ignoreConfig);
+        try
+        {
+            StovetopCore.Initialize(ignoreConfig);
+            CommandParser.ParseCommands(args, ignoreConfig);
+        }
+        catch (Exception ex)
+        {
+            StovetopCore.StovetopLogger?.Error(ex.Message);
+        }
     }
 }

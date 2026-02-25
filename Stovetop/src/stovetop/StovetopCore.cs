@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Stovetop.Commands;
 using Stovetop.ConfigParser;
+using Stovetop.Exceptions;
 using Stovetop.stovetop.handlers;
 using static System.Environment;
 
@@ -67,7 +68,7 @@ public static class StovetopCore
     public static void LoadConfig()
     {
         if (StovetopConfigPath == null)
-            return;
+            throw new StovetopUninitialisedException();
 
         StovetopConfig = StovetopConfigParser.ParseFile(StovetopConfigPath);
     }
@@ -75,7 +76,7 @@ public static class StovetopCore
     public static void SaveConfig()
     {
         if (StovetopConfig == null || StovetopConfigPath == null)
-            return;
+            throw new StovetopUninitialisedException();
 
         var sb = new StringBuilder();
 
@@ -132,7 +133,7 @@ public static class StovetopCore
     public static void CreateDefaultStructure()
     {
         if (StovetopConfigRoot == null)
-            return;
+            throw new StovetopUninitialisedException();
 
         Directory.CreateDirectory(StovetopConfigRoot);
 
@@ -143,7 +144,7 @@ public static class StovetopCore
     public static bool VerifyRuntime()
     {
         if (StovetopRuntime == null)
-            return false;
+            throw new StovetopNonexistentRuntimeException();
         
         ProcessStartInfo startInfo = new()
         {
@@ -161,8 +162,7 @@ public static class StovetopCore
             process?.WaitForExit();
             if (process != null && process.ExitCode != 0)
             {
-                StovetopLogger?.Error($"Runtime '{StovetopRuntime}' not found.");
-                return false;
+                throw new StovetopNonexistentRuntimeException();
             }
         }
 

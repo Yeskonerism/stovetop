@@ -1,3 +1,4 @@
+using Stovetop.Exceptions;
 using Stovetop.stovetop;
 using Stovetop.stovetop.handlers;
 
@@ -38,10 +39,7 @@ public class BackupCommand
         string? resolvedBackupId = ResolveBackupId(backupId);
 
         if (string.IsNullOrEmpty(resolvedBackupId))
-        {
-            StovetopCore.StovetopLogger?.Error("No backups available");
-            return;
-        }
+            throw new StovetopBackupNotFoundException();
 
         RevertToBackup(resolvedBackupId);
     }

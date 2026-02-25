@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Stovetop.Commands;
+using Stovetop.Exceptions;
 using Stovetop.stovetop;
 using Stovetop.stovetop.handlers;
 
@@ -31,13 +32,9 @@ public class ScriptCommand
         else
         {
             if (!File.Exists(scriptName))
-            {
-                StovetopCore.StovetopLogger?.Error("Script not found");
-            }
-            else
-            {
-                ExecuteShellScript(scriptName);
-            }
+                throw new StovetopScriptNotFoundException(scriptName);
+
+            ExecuteShellScript(scriptName);
         }
     }
 

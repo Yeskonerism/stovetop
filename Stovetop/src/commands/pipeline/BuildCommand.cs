@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Stovetop.Exceptions;
 using Stovetop.stovetop;
 using Stovetop.stovetop.handlers;
 
@@ -8,18 +9,14 @@ public class BuildCommand
 {
     public static void Run()
     {
-        // verify runtime exists
         if (!StovetopCore.StovetopConfigExists)
-            return;
-        
+            throw new StovetopNonexistentConfigException();
+
         if (StovetopCore.StovetopConfig == null)
-            return;  // Guard against null
-        
+            throw new StovetopUninitialisedException();
+
         if (string.IsNullOrEmpty(StovetopCore.StovetopRuntime))
-        {
-            StovetopCore.StovetopLogger?.Error("Runtime not configured");
-            return;
-        }
+            throw new StovetopNonexistentRuntimeException();
 
         string? buildCmd = null;
         StovetopCore.StovetopConfig?.Commands.TryGetValue("build", out buildCmd);
@@ -43,10 +40,7 @@ public class BuildCommand
 
         var process = Process.Start(buildProcess);
         if (process == null)
-        {
-            StovetopCore.StovetopLogger?.Error("Failed to start build process");
-            return;
-        }
+            throw new StovetopProcessStartFailedException();
         process.WaitForExit();
 
         if (process.ExitCode != 0)

@@ -20,7 +20,7 @@ public class CommandRegistry
             "init",
             "Initialize a new project",
             "stove init (runtime)",
-            "pipeline",
+            StovetopCommand.CommandCatagory.Pipeline,
             InitCommand.Run,
             ["i"]
         );
@@ -28,7 +28,7 @@ public class CommandRegistry
             "run",
             "Run the project",
             "stove run (--backup [backup])",
-            "pipeline",
+            StovetopCommand.CommandCatagory.Pipeline,
             RunCommand.Run,
             ["r"]
         );
@@ -36,7 +36,7 @@ public class CommandRegistry
             "build",
             "Build the project",
             "stove build (--backup [backup])",
-            "pipeline",
+            StovetopCommand.CommandCatagory.Pipeline,
             BuildCommand.Run,
             ["b", "bld"]
         );
@@ -44,7 +44,7 @@ public class CommandRegistry
             "backup",
             "Create a backup of the current config",
             "stove backup (list | revert [backup])",
-            "config",
+            StovetopCommand.CommandCatagory.Config,
             BackupCommand.Run,
             ["bak", "bkp"]
         );
@@ -52,7 +52,7 @@ public class CommandRegistry
             "help",
             "Show this help message",
             "stove help (command)",
-            "user",
+            StovetopCommand.CommandCatagory.User,
             HelpCommand.Run,
             ["h"]
         );
@@ -60,18 +60,18 @@ public class CommandRegistry
             "config",
             "View and edit the current config",
             "stove config (view|edit)",
-            "config",
+            StovetopCommand.CommandCatagory.Config,
             ConfigCommand.Run,
             ["cfg"]
         );
-        RegisterCommand("script", "", "", "user", ScriptCommand.Run, ["sc"]);
+        RegisterCommand("script", "", "", StovetopCommand.CommandCatagory.User, ScriptCommand.Run, ["sc"]);
     }
 
     public static void RegisterCommand(
         string name,
         string desc,
         string usage,
-        string category,
+        StovetopCommand.CommandCatagory category,
         Action command,
         string[]? aliases = null
     )
